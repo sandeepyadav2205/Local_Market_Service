@@ -1,0 +1,647 @@
+﻿@{
+    ViewData["Title"] = "Trusted Local Services";
+}
+
+<!-- 🔹 Hero Section -->
+<section class="hero-section-custom">
+    <!-- Background decorations -->
+    <div class="hero-bg-circle hero-bg-circle-1"></div>
+    <div class="hero-bg-circle hero-bg-circle-2"></div>
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <!-- Left Text -->
+            <div class="col-lg-6">
+                <div class="hero-tag animate-fade-in delay-1">
+                    <span class="hero-tag-dot"></span>
+                    <i class="bi bi-patch-check-fill"></i> Trusted by 10,000+ Happy Customers
+                </div>
+                <h1 class="hero-title mt-3">
+                    Your City's Best<br>
+                    <span class="gradient-text">Services, One Tap</span><br>
+                    Away
+                </h1>
+                <p class="hero-subtitle">
+                    Book verified plumbers, electricians, cleaners & more — right at your doorstep. Fast
+                    booking, transparent pricing, zero hassle.
+                </p>
+
+                <!-- Search box -->
+                <div class="hero-search-wrapper">
+                    <div class="hero-search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="search" placeholder="e.g. Plumbing, Car Wash, Electrician...">
+                        <button type="submit"><i class="bi bi-search me-1"></i> Search</button>
+                    </div>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="hero-cta-row">
+                    <a href="#services" class="hero-btn-primary">
+                        <i class="bi bi-grid-fill"></i> Explore Services
+                    </a>
+                    <div class="dropdown d-inline-block">
+                        <a href="#" class="hero-btn-secondary dropdown-toggle" data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <i class="bi bi-person-plus-fill"></i> Join Free
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-custom">
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="/Account/RegisterCustomer">
+                                    <i class="bi bi-person-fill text-success"></i> Customer Registration
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item dropdown-item-custom" href="/Account/RegisterProvider">
+                                    <i class="bi bi-briefcase-fill text-primary"></i> Provider Registration
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span>500+</span>
+                        <p>Services</p>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span>200+</span>
+                        <p>Providers</p>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span>4.9★</span>
+                        <p>Avg Rating</p>
+                    </div>
+                    <div class="hero-stat-divider"></div>
+                    <div class="hero-stat">
+                        <span>10K+</span>
+                        <p>Happy Users</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Right Image -->
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-img-wrapper">
+                    <img src="https://images.unsplash.com/photo-1628177142898-93e36e4e3a50?auto=format&fit=crop&w=1200&q=80"
+                         alt="Trusted Local Services" class="hero-img">
+                    <!-- Floating card 1 — bottom left -->
+                    <div class="hero-img-card card-1">
+                        <div class="hero-img-card-icon" style="background:#fef9c3; color:#d97706;">
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <div>
+                            <strong>4.9 / 5 Rating</strong>
+                            <p>From 2,400+ reviews</p>
+                        </div>
+                    </div>
+                    <!-- Floating card 2 — top right -->
+                    <div class="hero-img-card card-2">
+                        <div class="hero-img-card-icon" style="background:#dcfce7; color:#16a34a;">
+                            <i class="bi bi-shield-check-fill"></i>
+                        </div>
+                        <div>
+                            <strong>Verified Pros</strong>
+                            <p>200+ trusted providers</p>
+                        </div>
+                    </div>
+                    <!-- Floating card 3 — middle right -->
+                    <div class="hero-img-card card-3">
+                        <div class="hero-img-card-icon" style="background:#ede9fe; color:#7c3aed;">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div>
+                            <strong>Quick Booking</strong>
+                            <p>In under 2 minutes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 🔹 Categories Section -->
+<section class="categories-section" id="categories">
+    <!-- Background Glow Blobs -->
+    <div class="cat-blob cat-blob-1"></div>
+    <div class="cat-blob cat-blob-2"></div>
+
+    <div class="container" style="position:relative; z-index:1;">
+
+        <!-- Heading -->
+        <div class="section-heading-wrapper text-center animate-fade-in delay-1 mb-5">
+            <span class="cat-section-badge"><i class="bi bi-grid-fill me-2"></i>Explore Categories</span>
+            <h2 class="mt-3 mb-2">Browse Services by <span>Category</span></h2>
+            <p class="mx-auto text-muted mb-0" style="max-width: 520px;">
+                Discover handpicked, top-rated local professionals categorized for your quick and easy booking.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+
+            <!-- Plumbing -->
+            <div class="col-6 col-md-3 animate-fade-in delay-1">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#3b82f6,#1d4ed8); --cat-bg:#eff6ff; --cat-border:rgba(59,130,246,0.2); --cat-shadow:rgba(59,130,246,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-tools" style="color:#3b82f6;"></i>
+                        </div>
+                        <h5 class="category-title">Plumbing</h5>
+                        <p class="category-count">48 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automobile -->
+            <div class="col-6 col-md-3 animate-fade-in delay-2">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#22c55e,#15803d); --cat-bg:#dcfce7; --cat-border:rgba(22,163,74,0.2); --cat-shadow:rgba(22,163,74,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-car-front-fill" style="color:#16a34a;"></i>
+                        </div>
+                        <h5 class="category-title">Automobile</h5>
+                        <p class="category-count">35 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Electronics -->
+            <div class="col-6 col-md-3 animate-fade-in delay-3">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#f59e0b,#b45309); --cat-bg:#fef9c3; --cat-border:rgba(245,158,11,0.2); --cat-shadow:rgba(245,158,11,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-phone-fill" style="color:#d97706;"></i>
+                        </div>
+                        <h5 class="category-title">Electronics</h5>
+                        <p class="category-count">62 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groceries -->
+            <div class="col-6 col-md-3 animate-fade-in delay-4">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#ef4444,#b91c1c); --cat-bg:#fee2e2; --cat-border:rgba(239,68,68,0.2); --cat-shadow:rgba(239,68,68,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-basket2-fill" style="color:#dc2626;"></i>
+                        </div>
+                        <h5 class="category-title">Groceries</h5>
+                        <p class="category-count">29 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cleaning -->
+            <div class="col-6 col-md-3 animate-fade-in delay-1">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#8b5cf6,#6d28d9); --cat-bg:#ede9fe; --cat-border:rgba(139,92,246,0.2); --cat-shadow:rgba(139,92,246,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-house-heart-fill" style="color:#7c3aed;"></i>
+                        </div>
+                        <h5 class="category-title">Cleaning</h5>
+                        <p class="category-count">41 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Electrician -->
+            <div class="col-6 col-md-3 animate-fade-in delay-2">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#06b6d4,#0e7490); --cat-bg:#cffafe; --cat-border:rgba(6,182,212,0.2); --cat-shadow:rgba(6,182,212,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-lightning-charge-fill" style="color:#0891b2;"></i>
+                        </div>
+                        <h5 class="category-title">Electrician</h5>
+                        <p class="category-count">53 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salon -->
+            <div class="col-6 col-md-3 animate-fade-in delay-3">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#ec4899,#be185d); --cat-bg:#fce7f3; --cat-border:rgba(236,72,153,0.2); --cat-shadow:rgba(236,72,153,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-scissors" style="color:#db2777;"></i>
+                        </div>
+                        <h5 class="category-title">Salon</h5>
+                        <p class="category-count">37 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery -->
+            <div class="col-6 col-md-3 animate-fade-in delay-4">
+                <div class="category-card-custom h-100"
+                     style="--cat-gradient: linear-gradient(135deg,#f97316,#c2410c); --cat-bg:#ffedd5; --cat-border:rgba(249,115,22,0.2); --cat-shadow:rgba(249,115,22,0.25);">
+                    <div class="category-card-inner">
+                        <div class="category-icon-wrapper">
+                            <i class="bi bi-truck" style="color:#ea580c;"></i>
+                        </div>
+                        <h5 class="category-title">Delivery</h5>
+                        <p class="category-count">22 services</p>
+                        <div class="category-arrow"><i class="bi bi-arrow-right"></i></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Centered View All CTA -->
+        <div class="text-center mt-5 animate-fade-in delay-3">
+            <a href="/Home/Categories" class="view-all-link-premium">
+                View All Categories <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<!-- 🔹 Trending Services -->
+<section class="py-5 trending-section" id="services">
+    <div class="container">
+        <div class="section-heading-wrapper animate-fade-in delay-1">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h2 class="mb-1">Trending <span>Services</span></h2>
+                    <p class="mb-0">Highly rated and popular local services booked by customers recently.</p>
+                </div>
+                <a href="/Home/Services" class="view-all-link">
+                    View All <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- House Cleaning -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-1">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#8b5cf6,#6d28d9); --tc-light:#ede9fe; --tc-color:#7c3aed;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80"
+                             alt="House Cleaning">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-house-heart-fill"></i> Cleaning
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.9 <span>(120+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-house-heart-fill"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>House Cleaning</h5>
+                            <p>Professional home cleaning & sanitization at your doorstep.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">₹499/hr</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Repair -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-2">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#f59e0b,#b45309); --tc-light:#fef9c3; --tc-color:#d97706;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=600&q=80"
+                             alt="Mobile Repair">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-phone-fill"></i> Electronics
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.8 <span>(85+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-phone-fill"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>Mobile Repair</h5>
+                            <p>Fast screen, battery & software repair on all brands.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">From ₹349</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Car Wash -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-3">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#22c55e,#15803d); --tc-light:#dcfce7; --tc-color:#16a34a;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=600&q=80"
+                             alt="Car Wash">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-car-front-fill"></i> Automobile
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.7 <span>(95+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-car-front-fill"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>Car Wash & Detailing</h5>
+                            <p>Premium wash, detailing & polish at your garage.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">₹599/session</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Electrician -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-1">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#06b6d4,#0e7490); --tc-light:#cffafe; --tc-color:#0891b2;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80"
+                             alt="Electrician">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-lightning-charge-fill"></i> Electrician
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.8 <span>(73+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>Electrician</h5>
+                            <p>Wiring, switches, fan installation & all electrical fixes.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">₹299/visit</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salon -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-2">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#ec4899,#be185d); --tc-light:#fce7f3; --tc-color:#db2777;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80"
+                             alt="Salon">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-scissors"></i> Salon
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.9 <span>(140+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-scissors"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>Salon at Home</h5>
+                            <p>Haircut, facial, threading & beauty services at home.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">From ₹249</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plumbing -->
+            <div class="col-md-6 col-lg-4 animate-fade-in delay-3">
+                <div class="trend-card"
+                     style="--tc-gradient: linear-gradient(135deg,#3b82f6,#1d4ed8); --tc-light:#eff6ff; --tc-color:#2563eb;">
+                    <div class="trend-card-top">
+                        <img src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=600&q=80"
+                             alt="Plumbing">
+                        <div class="trend-overlay"></div>
+                        <div class="trend-cat-badge">
+                            <i class="bi bi-tools"></i> Plumbing
+                        </div>
+                        <div class="trend-rating">
+                            <i class="bi bi-star-fill"></i> 4.6 <span>(58+)</span>
+                        </div>
+                    </div>
+                    <div class="trend-card-body">
+                        <div class="trend-icon-box">
+                            <i class="bi bi-tools"></i>
+                        </div>
+                        <div class="trend-info">
+                            <h5>Plumbing Repair</h5>
+                            <p>Pipe leaks, tap repair, drainage & bathroom fittings.</p>
+                            <div class="trend-footer">
+                                <span class="trend-price">₹399/visit</span>
+                                <a href="#" class="trend-book-btn">
+                                    Book Now <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- 🔹 Contact Us + Map Section -->
+<section class="contact-section" id="contact">
+    <!-- Decorative blobs -->
+    <div class="ct-blob ct-blob-1"></div>
+    <div class="ct-blob ct-blob-2"></div>
+    <div class="container" style="position:relative;z-index:1;">
+
+        <!-- Heading -->
+        <div class="section-heading-wrapper text-center animate-fade-in delay-1">
+            <span class="ct-section-badge"><i class="bi bi-chat-heart-fill me-2"></i>Contact Us</span>
+            <h2 class="mt-3">Get In <span>Touch</span></h2>
+            <p class="mx-auto" style="max-width:480px;">
+                Have a question or need help? We'd love to hear from
+                you.
+                Our team responds within 24 hours.
+            </p>
+        </div>
+
+        <div class="row g-4 align-items-stretch">
+
+            <!-- LEFT: Info Cards + Form -->
+            <div class="col-lg-5 d-flex flex-column gap-3">
+
+                <!-- Contact Form -->
+                <div class="ct-form-card animate-fade-in delay-2">
+                    <div class="ct-form-title">
+                        <div class="ct-form-title-icon"><i class="bi bi-send-fill"></i></div>
+                        <div>
+                            <h5 class="mb-0">Send a Message</h5>
+                            <p class="mb-0">We'll get back to you soon</p>
+                        </div>
+                    </div>
+                    <form>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="ct-input-group">
+                                    <i class="bi bi-person"></i>
+                                    <input type="text" class="ct-input" placeholder="Your Name">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="ct-input-group">
+                                    <i class="bi bi-envelope"></i>
+                                    <input type="email" class="ct-input" placeholder="Email Address">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="ct-input-group">
+                                    <i class="bi bi-chat-square-text"></i>
+                                    <input type="text" class="ct-input" placeholder="Subject">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <textarea class="ct-input ct-textarea" placeholder="Your message..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="ct-submit-btn">
+                                    <i class="bi bi-send-fill"></i> Send Message
+                                    <span class="ct-btn-shine"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Quick Contact Info Row -->
+                <div class="row g-2 mt-1 px-1">
+                    <div class="col-4">
+                        <div class="d-flex align-items-center gap-2 p-2 bg-white border rounded-3 text-muted"
+                             style="font-size:0.75rem; font-weight:500;">
+                            <i class="bi bi-pin-map-fill text-success"></i>
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                Maharajganj,
+                                UP
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="d-flex align-items-center gap-2 p-2 bg-white border rounded-3 text-muted"
+                             style="font-size:0.75rem; font-weight:500;">
+                            <i class="bi bi-telephone-inbound-fill text-primary"></i>
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                +91
+                                7705977834
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="d-flex align-items-center gap-2 p-2 bg-white border rounded-3 text-muted"
+                             style="font-size:0.75rem; font-weight:500; overflow:hidden;">
+                            <i class="bi bi-envelope-at-fill text-danger"></i>
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                  title="support@localmarket.in">support@localmarket.in</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Support Guarantee Badge -->
+                <div class="mt-2 text-center text-muted"
+                     style="font-size: 0.8rem; background: rgba(22, 163, 74, 0.04); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(22, 163, 74, 0.1);">
+                    <i class="bi bi-headset text-success me-1"></i>
+                    <span>
+                        Average response time: <strong>under 2 hours</strong>. Your privacy is
+                        guaranteed.
+                    </span>
+                </div>
+
+            </div>
+
+            <!-- RIGHT: Map -->
+            <div class="col-lg-7 animate-fade-in delay-2">
+                <div class="ct-map-wrapper">
+                    <div class="ct-map-header">
+                        <div class="ct-map-header-left">
+                            <div class="ct-map-icon"><i class="bi bi-map"></i></div>
+                            <div>
+                                <strong>Our Location</strong>
+                                <p class="mb-0">Maharajganj, Uttar Pradesh</p>
+                            </div>
+                        </div>
+                        <a href="https://maps.google.com" target="_blank" class="ct-directions-btn">
+                            <i class="bi bi-navigation-fill"></i> Directions
+                        </a>
+                    </div>
+                    <div class="ct-map-frame">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d57302.58551983055!2d83.53956!3d27.1303!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3996e3c0b1ac4b93%3A0x6e23571d3a95b1f5!2sMaharajganj%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000"
+                                width="100%" height="400" style="border:0;" allowfullscreen loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                    <!-- Social Links below map -->
+                    <div class="ct-social-row">
+                        <span>Follow us:</span>
+                        <a href="#" class="ct-social-btn" style="--cs-clr:#1877f2;">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="ct-social-btn" style="--cs-clr:#e1306c;">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="#" class="ct-social-btn" style="--cs-clr:#1da1f2;">
+                            <i class="bi bi-twitter-x"></i>
+                        </a>
+                        <a href="#" class="ct-social-btn" style="--cs-clr:#25d366;">
+                            <i class="bi bi-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

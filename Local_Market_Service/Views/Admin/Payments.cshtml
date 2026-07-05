@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "Payments";
+    Layout = "_AdminLayout";
+}
+
+@model ICollection<Local_Market_Service.Models.Payment>
+
+<style>
+    .page-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .admin-stat {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+        padding: 22px 20px; box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s;
+        position: relative; overflow: hidden;
+    }
+    .admin-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .admin-stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
+    
+    .ast-blue::after { background: var(--blue); }
+    .ast-green::after { background: var(--green); }
+
+    .stat-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px; }
+    .ast-blue .stat-icon-wrap { background: var(--blue-bg); color: var(--blue-txt); }
+    .ast-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+
+    .stat-val { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; display:flex; justify-content:space-between; }
+
+    /* ── Table Card ──────────────────────────────────────── */
+    .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+    .sec-card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .sec-card-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .sec-card-title i { color: var(--accent); font-size: 20px; }
+
+    .head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box i { position: absolute; left: 14px; color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    .search-box input { padding: 10px 14px 10px 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; font-size: 14px; width: 260px; transition: border-color .2s; }
+    .search-box input:focus { outline: none; border-color: var(--accent); }
+
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th { padding: 14px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
+    .dash-table td { padding: 16px 24px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: var(--surface-2); }
+
+    .s-badge { font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; text-transform: capitalize; }
+    .sb-success { background: #d1fae5; color: #065f46; }
+    .sb-pending { background: #fef3c7; color: #92400e; }
+    .sb-failed { background: #fee2e2; color: #991b1b; }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@media(max-width: 768px) { .admin-stats { grid-template-columns: 1fr; } .search-box input { width: 100%; } }
+</style>
+
+<div class="page-wrap">
+    <!-- Header -->
+    <div class="section-header" style="margin-bottom:0;">
+        <div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px;">Transactions</h1>
+            <p style="color:var(--text-muted); font-size:14px;">Overview of all platform payments and settlements.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <div class="admin-stat ast-blue">
+            <div class="stat-icon-wrap"><i class="ti ti-receipt"></i></div>
+            <div class="stat-val">@Model.Count</div>
+            <div class="stat-lbl">Total Transactions</div>
+        </div>
+        <div class="admin-stat ast-green">
+            <div class="stat-icon-wrap"><i class="ti ti-coin"></i></div>
+            <div class="stat-val">₹@(Model.Where(p => p.Status?.ToLower() == "completed" || p.Status?.ToLower() == "success").Sum(p => p.Amount ?? 0).ToString("0.00"))</div>
+            <div class="stat-lbl">Revenue (Completed)</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="sec-card">
+        <div class="sec-card-head">
+            <div class="sec-card-title"><i class="ti ti-cash-banknote"></i> Transaction Log</div>
+            <div class="head-actions">
+                <div class="search-box">
+                    <i class="ti ti-search"></i>
+                    <input type="text" id="pay-search" onkeyup="filterTable()" placeholder="Search transactions..." />
+                </div>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Booking Ref</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="pay-tbody">
+                    @foreach(var p in Model.OrderByDescending(x => x.PaymentDate))
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-family: monospace; font-weight: 700; color: var(--text); font-size: 15px;">@(p.TransactionId ?? "—")</div>
+                            </td>
+                            <td>
+                                <div style="color: var(--blue); font-weight: 600;">#@p.BookingId</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: var(--green-txt);">₹@(p.Amount?.ToString("0.00") ?? "0.00")</div>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    @if (p.PaymentMethod?.ToLower() == "card" || p.PaymentMethod?.ToLower() == "credit card") { 
+                                        <i class="ti ti-credit-card" style="color: var(--purple); font-size: 20px;"></i> 
+                                    }
+                                    else if (p.PaymentMethod?.ToLower() == "upi") { 
+                                        <i class="ti ti-qrcode" style="color: var(--blue); font-size: 20px;"></i> 
+                                    }
+                                    else { 
+                                        <i class="ti ti-cash" style="color: var(--green); font-size: 20px;"></i> 
+                                    }
+                                    <span style="font-weight: 600; text-transform: capitalize;">@(p.PaymentMethod ?? "Unknown")</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 500; color: var(--text);">@p.PaymentDate.ToString("MMM dd, yyyy")</div>
+                                <div style="font-size: 12px; color: var(--text-muted);"><i class="ti ti-clock"></i> @p.PaymentDate.ToString("hh:mm tt")</div>
+                            </td>
+                            <td>
+                                @{
+                                    string stat = p.Status?.ToLower() ?? "pending";
+                                    string bClass = stat == "failed" ? "sb-failed" : (stat == "pending" ? "sb-pending" : "sb-success");
+                                    string displayStat = stat == "success" || stat == "completed" ? "Completed" : (p.Status ?? "Pending");
+                                }
+                                <span class="s-badge @bClass">@displayStat</span>
+                            </td>
+                        </tr>
+                    }
+                    @if(!Model.Any()) {
+                        <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">No transactions found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Payments";
+        document.getElementById("page-crumb").innerText = "Payments";
+    });
+
+    function filterTable() {
+        const query = document.getElementById('pay-search').value.toLowerCase();
+        const rows = document.querySelectorAll('#pay-tbody tr');
+        rows.forEach(row => {
+            if(row.children.length === 1) return;
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+</script>

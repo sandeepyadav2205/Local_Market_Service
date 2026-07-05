@@ -1,0 +1,652 @@
+@model IEnumerable<Local_Market_Service.Models.Service>
+@{
+    ViewData["Title"] = "Explore Services";
+    Layout = "_CustomerLayout";
+    var allCats = ViewBag.Categories as IEnumerable<Local_Market_Service.Models.Category> ?? new List<Local_Market_Service.Models.Category>();
+    string searchTerm = ViewBag.SearchTerm ?? "";
+    int? selectedCat = ViewBag.SelectedCategory;
+}
+<style>
+    .explore-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        animation: fadeInUp .45s ease both;
+    }
+
+    /* ── Page Header ──────────────────────────────────────── */
+    .page-hero {
+        background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 36px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+    .page-hero::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(30,204,96,.12) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .page-hero-text .pg-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+    .page-hero-text .pg-sub {
+        font-size: 15px;
+        color: var(--text-sec);
+    }
+    .page-hero-badge {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border-radius: 16px;
+        padding: 18px 28px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+    .page-hero-badge .badge-num {
+        font-family: 'Outfit', sans-serif;
+        font-size: 36px;
+        font-weight: 800;
+        color: var(--accent-txt);
+        line-height: 1;
+    }
+    .page-hero-badge .badge-lbl { font-size: 12px; font-weight: 600; margin-top: 4px; }
+
+    /* ── Filter Bar ───────────────────────────────────────── */
+    .filter-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px 28px;
+        box-shadow: var(--shadow);
+    }
+    .filter-inner {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .search-wrap {
+        flex: 1;
+        min-width: 260px;
+        position: relative;
+    }
+    .search-wrap i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 18px;
+        pointer-events: none;
+    }
+    .inp-search {
+        width: 100%;
+        padding: 13px 16px 13px 44px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .inp-search:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(30,204,96,.15);
+    }
+    .cat-select {
+        padding: 13px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        min-width: 200px;
+        cursor: pointer;
+        outline: none;
+        transition: border-color .2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 40px;
+    }
+    .cat-select:focus { border-color: var(--accent); }
+    .btn-search {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 13px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: background .2s, transform .2s, box-shadow .2s;
+        box-shadow: 0 4px 14px rgba(30,204,96,.3);
+        white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--green-txt); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(30,204,96,.35); }
+    .btn-clear {
+        background: var(--bg);
+        color: var(--text-sec);
+        border: 1.5px solid var(--border);
+        padding: 13px 20px;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        transition: background .2s, color .2s;
+    }
+    .btn-clear:hover { background: var(--red-bg); color: var(--red-txt); border-color: var(--red-bg); }
+
+    /* Filter pills */
+    .active-filters {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+    .filter-pill {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .filter-pill i { font-size: 13px; }
+
+    /* ── Results Info ─────────────────────────────────────── */
+    .results-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .results-count {
+        font-size: 14px;
+        color: var(--text-sec);
+        font-weight: 500;
+    }
+    .results-count strong { color: var(--text); font-weight: 700; }
+    .sort-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* ── Service Cards ────────────────────────────────────── */
+    .svc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 24px;
+    }
+    .svc-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform .25s, box-shadow .25s, border-color .25s;
+        box-shadow: var(--shadow);
+        animation: fadeInUp .4s ease both;
+    }
+    .svc-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 48px rgba(30,204,96,.15);
+        border-color: rgba(30,204,96,.35);
+    }
+    .svc-img-wrap { position: relative; overflow: hidden; }
+    .svc-img {
+        width: 100%; height: 200px;
+        object-fit: cover;
+        transition: transform .4s ease;
+    }
+    .svc-card:hover .svc-img { transform: scale(1.06); }
+    .svc-overlay {
+        position: absolute; inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,.4) 0%, transparent 55%);
+    }
+    .svc-cat-tag {
+        position: absolute;
+        top: 12px; left: 12px;
+        background: rgba(255,255,255,.94);
+        backdrop-filter: blur(6px);
+        color: #15803d;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: .02em;
+    }
+    .svc-body { padding: 22px; flex: 1; display: flex; flex-direction: column; }
+    .svc-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+        line-height: 1.3;
+    }
+    .svc-prov {
+        font-size: 13px;
+        color: var(--text-sec);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .svc-prov i { color: var(--accent); font-size: 15px; }
+    .svc-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        flex: 1;
+        margin-bottom: 18px;
+    }
+    .svc-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+    .svc-price {
+        font-family: 'Outfit', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--accent-txt);
+    }
+    .svc-price small { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+    .btn-add-cart {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border: none;
+        padding: 10px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background .2s, color .2s, transform .15s;
+    }
+    .btn-add-cart:hover { background: var(--accent); color: #fff; transform: scale(1.06); }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-state {
+        text-align: center;
+        padding: 80px 32px;
+        background: var(--surface);
+        border-radius: 20px;
+        border: 2px dashed var(--border);
+    }
+    .empty-state .empty-icon { font-size: 80px; color: var(--border); margin-bottom: 20px; display: block; }
+    .empty-state h2 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 10px;
+    }
+    .empty-state p { font-size: 15px; color: var(--text-muted); margin-bottom: 28px; }
+    .btn-primary-sm {
+        background: var(--accent);
+        color: #fff;
+        padding: 12px 28px;
+        border-radius: 10px;
+        font-weight: 700;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        transition: background .2s, transform .2s;
+    }
+    .btn-primary-sm:hover { background: var(--green-txt); transform: translateY(-2px); }
+
+    @@media (max-width: 768px) {
+        .page-hero { flex-direction: column; gap: 20px; padding: 28px 20px; }
+        .page-hero-badge { align-self: flex-start; }
+        .filter-inner { flex-direction: column; align-items: stretch; }
+        .cat-select, .btn-search { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="explore-wrap">
+
+    <!-- ── Page Hero ──────────────────────────────────────── -->
+    <div class="page-hero">
+        <div class="page-hero-text">
+            <div class="pg-title">Explore Services</div>
+            <div class="pg-sub">Discover and book the best local professionals near you.</div>
+        </div>
+        <div class="page-hero-badge">
+            <div class="badge-num">@Model.Count()</div>
+            <div class="badge-lbl">Services Found</div>
+        </div>
+    </div>
+
+    <!-- ── Filter Bar ─────────────────────────────────────── -->
+    <div class="filter-card">
+        <form method="get" asp-action="Explore">
+            <div class="filter-inner">
+                <div class="search-wrap">
+                    <i class="ti ti-search"></i>
+                    <input type="text" name="search" value="@searchTerm" class="inp-search"
+                           placeholder="Search plumbers, electricians, cleaners..." />
+                </div>
+                <select name="categoryId" class="cat-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in allCats)
+                    {
+                        if (selectedCat == cat.Id)
+                        {
+                            <option value="@cat.Id" selected>@cat.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn-search">
+                    <i class="ti ti-search"></i> Search
+                </button>
+                @if (!string.IsNullOrEmpty(searchTerm) || selectedCat.HasValue)
+                {
+                    <a asp-action="Explore" class="btn-clear"><i class="ti ti-x"></i> Clear</a>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(searchTerm) || selectedCat.HasValue)
+            {
+                <div class="active-filters">
+                    @if (!string.IsNullOrEmpty(searchTerm))
+                    {
+                        <span class="filter-pill"><i class="ti ti-search"></i> "@searchTerm"</span>
+                    }
+                    @if (selectedCat.HasValue)
+                    {
+                        var catName = allCats.FirstOrDefault(c => c.Id == selectedCat.Value)?.Name ?? "Category";
+                        <span class="filter-pill"><i class="ti ti-category"></i> @catName</span>
+                    }
+                </div>
+            }
+        </form>
+    </div>
+
+    <!-- ── Results ─────────────────────────────────────────── -->
+    @if (Model.Any())
+    {
+        <div class="results-info">
+            <div class="results-count">
+                Showing <strong>@Model.Count()</strong> service@(Model.Count() != 1 ? "s" : "")
+                @if (!string.IsNullOrEmpty(searchTerm)) { <span> for "<strong>@searchTerm</strong>"</span> }
+            </div>
+        </div>
+
+        <div class="svc-grid">
+            @{ int idx = 0; }
+            @foreach (var svc in Model)
+            {
+                idx++;
+                <div class="svc-card" style="animation-delay: @(idx * 0.05)s">
+                    <div class="svc-img-wrap">
+                        <img src="/Images/@(svc.ImageUrl ?? "default-svc.png")" class="svc-img"
+                             onerror="this.src='/Images/default-svc.png';" alt="@svc.Name" />
+                        <div class="svc-overlay"></div>
+                        <span class="svc-cat-tag">@(svc.Category?.Name ?? "General")</span>
+                    </div>
+                    <div class="svc-body">
+                        <div class="svc-title">@svc.Name</div>
+                        <div class="svc-prov">
+                            <i class="ti ti-building-store"></i>
+                            @(svc.Provider?.BusinessName ?? "Independent Provider")
+                        </div>
+                        <div class="svc-desc">
+                            @(svc.Description != null && svc.Description.Length > 80
+                                ? svc.Description.Substring(0, 80) + "…"
+                                : svc.Description)
+                        </div>
+                        <div class="svc-footer" style="flex-wrap: wrap; gap: 10px;">
+                            <div class="svc-price" style="width: 100%;">₹@svc.Price <small>/ visit</small></div>
+                            <div style="display:flex; gap:8px; width: 100%;">
+                                <form asp-action="AddToCart" method="post" style="margin:0; flex:1;">
+                                    <input type="hidden" name="serviceId" value="@svc.Id" />
+                                    <button type="submit" class="btn-add-cart" style="width:100%; justify-content:center; background: var(--surface-2); color: var(--text); border: 1px solid var(--border);">
+                                        <i class="ti ti-shopping-cart-plus"></i> Cart
+                                    </button>
+                                </form>
+                                <form asp-action="BookNow" method="post" style="margin:0; flex:1;">
+                                    <input type="hidden" name="serviceId" value="@svc.Id" />
+                                    <button type="button" class="btn-add-cart" style="width:100%; justify-content:center;" onclick="confirmBookNow(this.form)">
+                                        <i class="ti ti-bolt"></i> Book Now
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="ti ti-mood-empty empty-icon"></i>
+            <h2>No Services Found</h2>
+            <p>We couldn't find any services matching your search. Try different keywords or browse all categories.</p>
+            <a asp-action="Explore" class="btn-primary-sm"><i class="ti ti-refresh"></i> Clear Filters</a>
+        </div>
+    }
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Explore Services";
+        document.getElementById("page-crumb").innerText = "Explore";
+    });
+
+    function confirmBookNow(form) {
+        Swal.fire({
+            title: '<span style="font-family: \'Outfit\', sans-serif; font-weight: 700; font-size: 24px; color: var(--text);">Select Payment Method</span>',
+            html: `
+                <div style="text-align: left; margin-top: 10px;">
+                    <p style="color: var(--text-sec); font-size: 15px; margin-bottom: 24px;">Please choose how you would like to pay for this service.</p>
+                    
+                    <div class="pm-options">
+                        <label class="pm-card">
+                            <input type="radio" name="swal-pm" value="Cash" checked>
+                            <div class="pm-card-inner">
+                                <div class="pm-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.1);"><i class="ti ti-cash"></i></div>
+                                <div class="pm-text">Cash on Delivery</div>
+                                <div class="pm-check"><i class="ti ti-circle-check-filled"></i></div>
+                            </div>
+                        </label>
+                        
+                        <label class="pm-card">
+                            <input type="radio" name="swal-pm" value="Online">
+                            <div class="pm-card-inner">
+                                <div class="pm-icon" style="color: #6366f1; background: rgba(99, 102, 241, 0.1);"><i class="ti ti-device-mobile-message"></i></div>
+                                <div class="pm-text">Pay Online</div>
+                                <div class="pm-check"><i class="ti ti-circle-check-filled"></i></div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#1ecc60',
+            cancelButtonColor: '#f1f5f9',
+            confirmButtonText: '<i class="ti ti-bolt" style="margin-right: 6px;"></i> Book Service',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'swal-premium-popup',
+                confirmButton: 'swal-premium-confirm',
+                cancelButton: 'swal-premium-cancel'
+            },
+            buttonsStyling: false,
+            showClass: { popup: 'animate__animated animate__zoomIn animate__faster' },
+            hideClass: { popup: 'animate__animated animate__zoomOut animate__faster' },
+            preConfirm: () => {
+                const selected = document.querySelector('input[name="swal-pm"]:checked');
+                if (!selected) {
+                    Swal.showValidationMessage('Please select a payment method');
+                    return false;
+                }
+                return selected.value;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const paymentMethod = result.value;
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'PaymentMethod';
+                input.value = paymentMethod;
+                form.appendChild(input);
+                
+                const btn = form.querySelector('button');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i>';
+                
+                form.submit();
+            }
+        });
+    }
+</script>
+
+<style>
+    /* Premium SweetAlert Styling */
+    .swal-premium-popup {
+        border-radius: 24px !important;
+        padding: 32px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12) !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+        width: 440px !important;
+    }
+    .swal-premium-confirm {
+        background: linear-gradient(135deg, #0f7a38, #1ecc60) !important;
+        color: #fff !important;
+        border: none !important;
+        padding: 14px 28px !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        box-shadow: 0 4px 14px rgba(30,204,96,0.3) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        margin: 0 8px !important;
+    }
+    .swal-premium-confirm:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(30,204,96,0.4) !important;
+    }
+    .swal-premium-cancel {
+        background: var(--bg) !important;
+        color: var(--text-sec) !important;
+        border: 1.5px solid var(--border) !important;
+        padding: 14px 24px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        transition: background 0.2s, color 0.2s !important;
+        margin: 0 8px !important;
+    }
+    .swal-premium-cancel:hover {
+        background: var(--surface-2) !important;
+        color: var(--text) !important;
+    }
+
+    /* Custom Payment Option Cards */
+    .pm-options {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .pm-card {
+        cursor: pointer;
+        display: block;
+        margin: 0;
+    }
+    .pm-card input[type="radio"] {
+        display: none;
+    }
+    .pm-card-inner {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        border: 2px solid var(--border);
+        border-radius: 16px;
+        background: var(--surface);
+        transition: all 0.25s ease;
+    }
+    .pm-icon {
+        width: 42px; height: 42px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+    .pm-text {
+        flex: 1;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        font-family: 'Outfit', sans-serif;
+    }
+    .pm-check {
+        color: var(--border);
+        font-size: 24px;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.25s ease;
+    }
+    .pm-card:hover .pm-card-inner {
+        border-color: rgba(30,204,96,0.4);
+        background: var(--surface-2);
+    }
+    .pm-card input[type="radio"]:checked + .pm-card-inner {
+        border-color: var(--accent);
+        background: rgba(30,204,96,0.05);
+        box-shadow: 0 4px 14px rgba(30,204,96,0.15);
+    }
+    .pm-card input[type="radio"]:checked + .pm-card-inner .pm-check {
+        opacity: 1;
+        color: var(--accent);
+        transform: scale(1);
+    }
+</style>

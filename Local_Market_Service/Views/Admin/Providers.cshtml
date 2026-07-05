@@ -1,0 +1,309 @@
+@{
+    ViewData["Title"] = "Providers";
+    Layout = "_AdminLayout";
+}
+
+@model ICollection<Local_Market_Service.Models.Provider>
+
+<style>
+    .page-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .admin-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 20px;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .admin-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .admin-stat::after {
+        content: ''; position: absolute; top: 0; left: 0; right: 0;
+        height: 3px; border-radius: 18px 18px 0 0;
+    }
+    .ast-blue::after { background: var(--blue); }
+    .ast-green::after { background: var(--green); }
+    .ast-amber::after { background: var(--amber); }
+
+    .stat-icon-wrap {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; margin-bottom: 14px;
+    }
+    .ast-blue .stat-icon-wrap { background: var(--blue-bg); color: var(--blue-txt); }
+    .ast-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+    .ast-amber .stat-icon-wrap { background: var(--amber-bg); color: var(--amber-txt); }
+
+    .stat-val { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; display:flex; justify-content:space-between; }
+    .stat-badge { font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+
+    /* ── Table Card ──────────────────────────────────────── */
+    .sec-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .sec-card-head {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+        display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .sec-card-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .sec-card-title i { color: var(--accent); font-size: 20px; }
+
+    .head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    
+    .search-box {
+        position: relative;
+        display: flex; align-items: center;
+    }
+    .search-box i { position: absolute; left: 14px; color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    .search-box input {
+        padding: 10px 14px 10px 40px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+        font-family: inherit; font-size: 14px;
+        width: 260px; transition: border-color .2s;
+    }
+    .search-box input:focus { outline: none; border-color: var(--accent); }
+
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th {
+        padding: 14px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .05em; color: var(--text-muted); background: var(--bg);
+        border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .dash-table td { padding: 16px 24px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: var(--surface-2); }
+
+    .td-user { display: flex; align-items: center; gap: 12px; }
+    .td-avatar {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: var(--accent-bg); color: var(--accent-txt);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 18px; object-fit: cover;
+    }
+    .td-name { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .td-sub { font-size: 12px; color: var(--text-muted); }
+
+    .s-badge { font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+    .sb-verified { background: #d1fae5; color: #065f46; }
+    .sb-pending { background: #fef3c7; color: #92400e; }
+
+    .action-btns { display: flex; gap: 8px; align-items: center; }
+    .act-btn {
+        width: 34px; height: 34px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none; font-size: 16px; transition: all .2s; border: 1px solid transparent; cursor: pointer;
+    }
+    .ab-view { background: var(--blue-bg); color: var(--blue); border-color: rgba(37,99,235,.2); }
+    .ab-view:hover { background: var(--blue); color: #fff; }
+    .ab-approve { background: var(--green-bg); color: var(--green); border-color: rgba(22,163,74,.2); }
+    .ab-approve:hover { background: var(--green); color: #fff; }
+    .ab-reject { background: var(--amber-bg); color: var(--amber); border-color: rgba(217,119,6,.2); }
+    .ab-reject:hover { background: var(--amber); color: #fff; }
+    .ab-del { background: var(--red-bg); color: var(--red); border-color: rgba(220,38,38,.2); }
+    .ab-del:hover { background: var(--red); color: #fff; }
+
+    /* Modal */
+    .modal-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,.5); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 1000; opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .modal-box {
+        background: var(--surface); width: 100%; max-width: 400px;
+        border-radius: 24px; padding: 32px; text-align: center;
+        transform: translateY(20px) scale(0.95); transition: all .3s;
+        box-shadow: var(--shadow-lg);
+    }
+    .modal-backdrop.active .modal-box { transform: translateY(0) scale(1); }
+    .modal-icon {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: var(--red-bg); color: var(--red); font-size: 32px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px;
+    }
+    .modal-title { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+    .modal-desc { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 12px; }
+    .m-btn {
+        flex: 1; padding: 12px; border-radius: 12px; font-weight: 700;
+        font-size: 14px; cursor: pointer; text-decoration: none; transition: all .2s; border: none;
+    }
+    .mb-cancel { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .mb-cancel:hover { background: var(--border); }
+    .mb-confirm { background: var(--red); color: #fff; }
+    .mb-confirm:hover { background: #b91c1c; }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@media(max-width: 768px) { .admin-stats { grid-template-columns: 1fr; } .search-box input { width: 100%; } }
+</style>
+
+<div class="page-wrap">
+    <!-- Header -->
+    <div class="section-header" style="margin-bottom:0;">
+        <div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px;">Provider Directory</h1>
+            <p style="color:var(--text-muted); font-size:14px;">Manage service providers and their verification statuses.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <div class="admin-stat ast-blue">
+            <div class="stat-icon-wrap"><i class="ti ti-briefcase"></i></div>
+            <div class="stat-val">@Model.Count</div>
+            <div class="stat-lbl">Total Providers</div>
+        </div>
+        <div class="admin-stat ast-green">
+            <div class="stat-icon-wrap"><i class="ti ti-shield-check"></i></div>
+            <div class="stat-val">@Model.Count(p => p.IsVerified == true)</div>
+            <div class="stat-lbl">Verified Providers</div>
+        </div>
+        <div class="admin-stat ast-amber">
+            <div class="stat-icon-wrap"><i class="ti ti-clock"></i></div>
+            <div class="stat-val">@Model.Count(p => p.IsVerified != true)</div>
+            <div class="stat-lbl">Pending Verification</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="sec-card">
+        <div class="sec-card-head">
+            <div class="sec-card-title"><i class="ti ti-list-details"></i> All Providers</div>
+            <div class="head-actions">
+                <div class="search-box">
+                    <i class="ti ti-search"></i>
+                    <input type="text" id="prov-search" onkeyup="filterTable()" placeholder="Search providers..." />
+                </div>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Business Name</th>
+                        <th>Contact</th>
+                        <th>Joined</th>
+                        <th style="text-align:center;">Services</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="prov-tbody">
+                    @foreach(var p in Model.OrderByDescending(x => x.CreatedAt))
+                    {
+                        <tr>
+                            <td>
+                                <div class="td-user">
+                                    @if (!string.IsNullOrEmpty(p.ApplicationUser?.profileImage) && p.ApplicationUser?.profileImage != "default.jpg")
+                                    {
+                                        <img src="/Images/@p.ApplicationUser.profileImage" class="td-avatar" alt="Avatar" onerror="this.outerHTML='<div class=\'td-avatar\'><i class=\'ti ti-user\'></i></div>'" />
+                                    }
+                                    else if (p.ApplicationUser?.profileImage == "default.jpg")
+                                    {
+                                        <img src="/Images/default.jpg" class="td-avatar" alt="Avatar" />
+                                    }
+                                    else
+                                    {
+                                        <div class="td-avatar">@(p.ApplicationUser?.FullName?.Substring(0,1).ToUpper() ?? "P")</div>
+                                    }
+                                    <div>
+                                        <div class="td-name">@p.ApplicationUser?.FullName</div>
+                                        <div class="td-sub">@p.ApplicationUser?.Email</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-weight:600;">@(string.IsNullOrWhiteSpace(p.BusinessName) ? "—" : p.BusinessName)</td>
+                            <td style="font-weight:500;">@(string.IsNullOrWhiteSpace(p.ApplicationUser?.PhoneNumber) ? "—" : p.ApplicationUser.PhoneNumber)</td>
+                            <td style="color:var(--text-muted);">@p.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td style="text-align:center; font-weight:700; font-size:16px;">@(p.Services?.Count ?? 0)</td>
+                            <td>
+                                @if (p.IsVerified == true)
+                                {
+                                    <span class="s-badge sb-verified">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="s-badge sb-pending">Pending</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-btns" style="justify-content:flex-end;">
+                                    <a href="/Admin/ViewProvider/@p.Id" class="act-btn ab-view" title="View Details"><i class="ti ti-eye"></i></a>
+                                    @if(p.IsVerified == true)
+                                    {
+                                        <a href="/Admin/RejectProvider/@p.Id" class="act-btn ab-reject" title="Revoke Verification"><i class="ti ti-x"></i></a>
+                                    }
+                                    else
+                                    {
+                                        <a href="/Admin/ApproveProvider/@p.Id" class="act-btn ab-approve" title="Approve Provider"><i class="ti ti-check"></i></a>
+                                    }
+                                    <button class="act-btn ab-del" title="Delete Provider" onclick="openDeleteModal('@p.Id')"><i class="ti ti-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @if(!Model.Any()) {
+                        <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--text-muted);">No providers found in the system.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-backdrop" id="delModal">
+    <div class="modal-box">
+        <div class="modal-icon"><i class="ti ti-alert-triangle"></i></div>
+        <h3 class="modal-title">Delete Provider?</h3>
+        <p class="modal-desc">Are you sure you want to delete this provider? This action will remove all their data, services, and cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="m-btn mb-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <a href="#" id="delConfirmBtn" class="m-btn mb-confirm" style="display:flex; align-items:center; justify-content:center;">Yes, Delete</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Providers";
+        document.getElementById("page-crumb").innerText = "Providers";
+    });
+
+    function filterTable() {
+        const query = document.getElementById('prov-search').value.toLowerCase();
+        const rows = document.querySelectorAll('#prov-tbody tr');
+        rows.forEach(row => {
+            if(row.children.length === 1) return;
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    function openDeleteModal(id) {
+        if(!id) return;
+        document.getElementById('delConfirmBtn').href = '/Admin/DeleteProvider/' + id;
+        document.getElementById('delModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('delModal').classList.remove('active');
+    }
+</script>

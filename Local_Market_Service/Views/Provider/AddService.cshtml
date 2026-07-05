@@ -1,0 +1,291 @@
+@model Service
+@{
+    ViewData["Title"] = "Add New Service";
+    Layout = "_ProviderLayout";
+}
+<style>
+    .page-wrap {
+        display: flex; flex-direction: column; gap: 32px; 
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        max-width: 850px; margin: 0 auto; width: 100%; padding: 20px 0 60px;
+    }
+
+    /* Back Link */
+    .back-link {
+        display: inline-flex; align-items: center; gap: 8px; color: var(--text-sec); text-decoration: none;
+        font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 30px; 
+        background: rgba(var(--bg-rgb, 255,255,255), 0.5); backdrop-filter: blur(10px);
+        border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: fit-content;
+    }
+    .back-link:hover { 
+        color: var(--accent); border-color: rgba(30, 204, 96, 0.4); 
+        transform: translateX(-4px); background: rgba(30, 204, 96, 0.05); 
+    }
+
+    /* Glass Card */
+    .glass-card {
+        background: var(--surface);
+        border-radius: 28px; border: 1px solid var(--border);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+        overflow: hidden; position: relative;
+    }
+    
+    .glass-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 180px;
+        background: linear-gradient(135deg, rgba(30,204,96,0.1) 0%, rgba(59,130,246,0.05) 100%);
+        z-index: 0; pointer-events: none; opacity: 0.6;
+    }
+
+    .card-content { position: relative; z-index: 1; }
+
+    /* Header */
+    .card-header {
+        padding: 40px 48px 30px; text-align: center;
+    }
+    .ch-icon {
+        width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 22px;
+        background: linear-gradient(135deg, #1ecc60, #10b981); color: white;
+        display: flex; align-items: center; justify-content: center; font-size: 32px;
+        box-shadow: 0 12px 24px rgba(30,204,96,0.3); transform: rotate(-5deg);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .glass-card:hover .ch-icon { transform: rotate(0deg) scale(1.05); }
+    
+    .ch-title { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 800; color: var(--text); margin-bottom: 8px; letter-spacing: -0.5px; }
+    .ch-sub { font-size: 15px; color: var(--text-muted); font-weight: 500; max-width: 400px; margin: 0 auto; line-height: 1.5; }
+
+    /* Form Grid */
+    .f-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 0 48px 40px;
+    }
+    .f-full { grid-column: 1 / -1; }
+
+    /* Floating Input Design */
+    .f-group { position: relative; display: flex; flex-direction: column; }
+    
+    .f-label {
+        position: absolute; top: 18px; left: 20px; font-size: 15px; color: var(--text-muted);
+        pointer-events: none; transition: all 0.25s ease; font-weight: 500;
+        background: var(--surface); padding: 0 4px; z-index: 2;
+    }
+    .f-input {
+        width: 100%; padding: 18px 20px; border: 2px solid var(--border); border-radius: 16px;
+        background: transparent; color: var(--text); font-size: 15px; font-weight: 600;
+        font-family: inherit; transition: all 0.3s ease; position: relative; z-index: 1;
+    }
+    .f-input:focus, .f-input:not(:placeholder-shown) { border-color: var(--accent); }
+    .f-input:focus ~ .f-label, .f-input:not(:placeholder-shown) ~ .f-label {
+        top: -10px; left: 16px; font-size: 12px; color: var(--accent); font-weight: 700;
+    }
+    
+    select.f-input {
+        padding-right: 40px; appearance: none; cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
+    }
+    textarea.f-input { min-height: 120px; resize: vertical; padding-top: 24px; }
+    
+    /* Input Icon Add-on */
+    .input-with-icon { position: relative; }
+    .input-with-icon .f-input { padding-left: 52px; }
+    .input-with-icon .f-label { left: 52px; }
+    .input-with-icon:focus-within .f-label, .input-with-icon .f-input:not(:placeholder-shown) ~ .f-label { left: 48px; }
+    .input-icon {
+        position: absolute; left: 20px; top: 20px; font-size: 20px; color: var(--text-muted);
+        z-index: 2; pointer-events: none; transition: all 0.3s ease;
+    }
+    .input-with-icon:focus-within .input-icon { color: var(--accent); transform: scale(1.1); }
+    
+    /* File Uploader */
+    .file-upload-box {
+        border: 2px dashed var(--border); border-radius: 20px; padding: 48px 20px; text-align: center;
+        background: rgba(0,0,0,0.01); cursor: pointer; transition: all 0.3s; position: relative;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    }
+    .file-upload-box:hover {
+        border-color: var(--accent); background: rgba(30, 204, 96, 0.03);
+        box-shadow: inset 0 0 0 4px rgba(30, 204, 96, 0.05);
+    }
+    .file-upload-box i { font-size: 48px; color: var(--accent); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .file-upload-box:hover i { transform: scale(1.15) translateY(-8px); }
+    
+    .fu-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .fu-sub { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+    .file-upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    
+    .img-preview {
+        width: 100%; max-height: 300px; border-radius: 16px; object-fit: cover;
+        border: 3px solid var(--accent); display: none; box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+        animation: zoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Footer Action */
+    .card-footer {
+        padding: 30px 48px; background: var(--surface-2); border-top: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-info { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-muted); font-weight: 600; }
+    .footer-info i { color: var(--accent); font-size: 20px; }
+    
+    .btn-glow {
+        background: linear-gradient(135deg, #1ecc60, #10b981); color: white; border: none;
+        padding: 16px 36px; border-radius: 16px; font-weight: 700; font-size: 16px; letter-spacing: 0.5px;
+        cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
+        box-shadow: 0 10px 25px rgba(30, 204, 96, 0.4);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden;
+    }
+    .btn-glow::after {
+        content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transform: skewX(-20deg); transition: 0.5s;
+    }
+    .btn-glow:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(30, 204, 96, 0.5); }
+    .btn-glow:hover::after { left: 150%; }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    
+    @@media (max-width: 768px) {
+        .f-grid { grid-template-columns: 1fr; padding: 0 24px 30px; }
+        .card-header { padding: 30px 24px 20px; }
+        .card-footer { flex-direction: column; gap: 20px; padding: 24px; text-align: center; }
+        .footer-info { justify-content: center; }
+        .btn-glow { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="page-wrap">
+    <div>
+        <a asp-action="Services" class="back-link"><i class="ti ti-arrow-left"></i> Back to Services</a>
+    </div>
+
+    <form asp-action="AddService" method="post" enctype="multipart/form-data" id="addForm">
+        
+        <div class="glass-card">
+            <div class="card-content">
+                
+                <div class="card-header">
+                    <div class="ch-icon"><i class="ti ti-sparkles"></i></div>
+                    <h1 class="ch-title">Create New Service</h1>
+                    <p class="ch-sub">Design a beautiful listing to showcase your expertise and attract more customers.</p>
+                </div>
+
+                <div class="f-grid">
+                    
+                    <div class="f-group f-full input-with-icon">
+                        <i class="ti ti-category input-icon"></i>
+                        <select asp-for="CategoryId" class="f-input" required placeholder=" ">
+                            <option value=""></option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                foreach (var c in ViewBag.Categories)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            }
+                        </select>
+                        <label class="f-label">Service Category *</label>
+                    </div>
+
+                    <div class="f-group f-full input-with-icon">
+                        <i class="ti ti-tag input-icon"></i>
+                        <input asp-for="Name" class="f-input" required placeholder=" " autocomplete="off" />
+                        <label class="f-label">Service Name *</label>
+                    </div>
+
+                    <div class="f-group input-with-icon">
+                        <i class="ti ti-currency-rupee input-icon"></i>
+                        <input asp-for="Price" type="number" step="0.01" min="0" class="f-input" required placeholder=" " />
+                        <label class="f-label">Price (₹) *</label>
+                    </div>
+
+                    <div class="f-group input-with-icon">
+                        <i class="ti ti-info-circle input-icon"></i>
+                        <input name="PriceNote" class="f-input" placeholder=" " autocomplete="off" />
+                        <label class="f-label">Price Note (Optional)</label>
+                    </div>
+
+                    <div class="f-group f-full input-with-icon">
+                        <i class="ti ti-file-description input-icon" style="top:22px;"></i>
+                        <textarea asp-for="Description" class="f-input" placeholder=" "></textarea>
+                        <label class="f-label" style="top:24px;">Detailed Description</label>
+                    </div>
+                    
+                    <div class="f-group f-full" style="margin-top: 10px;">
+                        <label style="font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: block;">
+                            Cover Image <span style="color:var(--text-muted);font-size:13px;font-weight:500;margin-left:8px;">(High quality recommended)</span>
+                        </label>
+                        
+                        <div class="file-upload-box" id="dropZone">
+                            <img id="imgPreview" class="img-preview" src="#" alt="Preview" />
+                            <div id="uploadPrompt">
+                                <i class="ti ti-cloud-upload"></i>
+                                <div class="fu-title">Upload a stunning image</div>
+                                <div class="fu-sub">Drag & drop or click to browse (Max 5MB)</div>
+                            </div>
+                            <input type="file" id="imgFileInput" name="ImageFile" accept="image/*" onchange="handleImage(event)" />
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer">
+                    <div class="footer-info">
+                        <i class="ti ti-shield-check-filled"></i>
+                        <span>Service will be instantly live after publishing.</span>
+                    </div>
+                    <button type="submit" class="btn-glow" id="submitBtn">
+                        <i class="ti ti-rocket"></i> Publish Service
+                    </button>
+                </div>
+
+            </div>
+        </div>
+        
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Form submission loading state
+        document.getElementById("addForm").addEventListener("submit", function(e) {
+            const btn = document.getElementById("submitBtn");
+            btn.style.width = btn.offsetWidth + 'px'; // maintain width
+            btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;"></i> Publishing...';
+            btn.style.opacity = '0.8';
+            btn.style.pointerEvents = 'none';
+        });
+
+        // Initialize selects to show placeholder properly
+        const selects = document.querySelectorAll('select.f-input');
+        selects.forEach(s => {
+            if(!s.value) s.classList.add('empty');
+            s.addEventListener('change', function() {
+                if(this.value) this.classList.remove('empty');
+                else this.classList.add('empty');
+            });
+        });
+    });
+
+    function handleImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const preview = document.getElementById("imgPreview");
+            const prompt = document.getElementById("uploadPrompt");
+            const zone = document.getElementById("dropZone");
+            
+            preview.src = event.target.result;
+            preview.style.display = "block";
+            prompt.style.display = "none";
+            
+            zone.style.padding = "10px";
+            zone.style.borderStyle = "solid";
+            zone.style.background = "var(--surface)";
+        };
+        reader.readAsDataURL(file);
+    }
+</script>

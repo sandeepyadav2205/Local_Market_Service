@@ -1,0 +1,425 @@
+@model Local_Market_Service.Models.Provider
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Provider Details";
+}
+
+<style>
+    .page-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* View Provider Specific Styles */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 16px;
+        transition: color 0.2s;
+    }
+    .back-link:hover {
+        color: var(--accent);
+    }
+    .profile-hero {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 32px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+    }
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        font-size: 32px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .profile-info {
+        flex: 1;
+    }
+    .profile-name {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .status-pill {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        background: var(--green-bg);
+        color: var(--green-txt);
+    }
+    .status-pill.inactive, .status-pill.rejected {
+        background: var(--red-bg);
+        color: var(--red-txt);
+    }
+    .status-pill.pending {
+        background: var(--amber-bg);
+        color: var(--amber-txt);
+    }
+    .profile-meta {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 24px;
+    }
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+    }
+    .card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+    }
+    .card-header i {
+        color: var(--accent);
+        font-size: 20px;
+    }
+    .card-body {
+        padding: 24px;
+    }
+    .info-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .info-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .info-value {
+        font-size: 14px;
+        color: var(--text);
+        font-weight: 500;
+        word-break: break-word;
+    }
+    
+    .table-wrap {
+        overflow-x: auto;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th {
+        text-align: left;
+        padding: 12px 24px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: var(--surface-2);
+        border-bottom: 1px solid var(--border);
+    }
+    td {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        color: var(--text);
+    }
+    tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .action-btn-large {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.2s;
+        gap: 8px;
+    }
+    .btn-approve {
+        background: var(--green);
+        color: white;
+    }
+    .btn-approve:hover {
+        background: var(--green-txt);
+    }
+    .btn-reject {
+        background: var(--amber);
+        color: white;
+    }
+    .btn-reject:hover {
+        background: var(--amber-txt);
+    }
+    .btn-doc {
+        background: var(--blue-bg);
+        color: var(--blue);
+    }
+    .btn-doc:hover {
+        background: var(--blue);
+        color: white;
+    }
+    
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Responsive Fixes */
+    @@media (max-width: 992px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @@media (max-width: 768px) {
+        .profile-hero {
+            flex-direction: column;
+            text-align: center;
+            align-items: center;
+        }
+        .profile-name {
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .profile-meta {
+            justify-content: center;
+        }
+        .action-btn-large {
+            width: 100%;
+        }
+        .card-header {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<div class="page-wrap">
+
+    <!-- Header -->
+    <div>
+        <a href="/Admin/Providers" class="back-link"><i class="ti ti-arrow-left"></i> Back to Providers</a>
+        <div class="section-header" style="margin-bottom: 0;">
+            <h1 class="section-title">Provider Details</h1>
+        </div>
+    </div>
+
+    <!-- Profile Hero -->
+    <div class="profile-hero">
+        <div class="profile-avatar">
+            @if(!string.IsNullOrEmpty(Model.ApplicationUser?.profileImage)) {
+                <img src="/Images/@Model.ApplicationUser.profileImage" alt="Profile" />
+            } else {
+                @(Model.ApplicationUser?.FullName != null && Model.ApplicationUser.FullName.Length >= 2 ? Model.ApplicationUser.FullName.Substring(0, 2).ToUpper() : "PR")
+            }
+        </div>
+        <div class="profile-info">
+            <div class="profile-name">
+                @(Model.ApplicationUser?.FullName ?? "Unknown")
+                @if (Model.IsVerified == true)
+                {
+                    <span class="status-pill">Verified</span>
+                }
+                else
+                {
+                    <span class="status-pill pending">Pending Verification</span>
+                }
+            </div>
+            <div class="profile-meta">
+                <div class="meta-item"><i class="ti ti-mail"></i> @Model.ApplicationUser?.Email</div>
+                <div class="meta-item"><i class="ti ti-phone"></i> @Model.ApplicationUser?.PhoneNumber</div>
+                <div class="meta-item"><i class="ti ti-briefcase"></i> @(Model.BusinessName ?? "No Business Name")</div>
+                <div class="meta-item"><i class="ti ti-map-pin"></i> @Model.City, @Model.State</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="details-grid">
+
+        <!-- Left Column: Personal Info -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="card">
+                <div class="card-header"><i class="ti ti-user-circle"></i> Business Information</div>
+                <div class="card-body">
+                    <div class="info-list">
+                        <div class="info-item">
+                            <span class="info-label">Business Name</span>
+                            <span class="info-value">@(Model.BusinessName ?? "-")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Experience</span>
+                            <span class="info-value">@(Model.Experience ?? "-")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Full Address</span>
+                            <span class="info-value">@Model.Address, @Model.City, @Model.State @Model.Pincode</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Description</span>
+                            <span class="info-value">@(Model.Description ?? "-")</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Join Date</span>
+                            <span class="info-value">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><i class="ti ti-file-certificate"></i> Verification Document</div>
+                <div class="card-body">
+                    <div class="info-list">
+                        @if (Model.ProviderDocument != null)
+                        {
+                            <div class="info-item">
+                                <span class="info-label">Document Type</span>
+                                <span class="info-value">@Model.ProviderDocument.DocumentType</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Document Number</span>
+                                <span class="info-value">@Model.ProviderDocument.DocumentNumber</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Document Status</span>
+                                <span class="info-value" style="margin-top: 4px;">
+                                    @if (Model.ProviderDocument.Status?.ToLower() == "approved")
+                                    {
+                                        <span class="status-pill">Approved</span>
+                                    }
+                                    else if (Model.ProviderDocument.Status?.ToLower() == "rejected")
+                                    {
+                                        <span class="status-pill rejected">Rejected</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-pill pending" style="text-transform: capitalize;">@(Model.ProviderDocument.Status ?? "Pending")</span>
+                                    }
+                                </span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.ProviderDocument.DocumentUrl))
+                            {
+                                <div style="margin-top: 12px;">
+                                    <a href="/Images/@Model.ProviderDocument.DocumentUrl" target="_blank" class="action-btn-large btn-doc">
+                                        <i class="ti ti-external-link"></i> View Document
+                                    </a>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div style="color: var(--text-muted); font-size: 14px;">No document uploaded by this provider yet.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Actions & Services -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <div class="card">
+                <div class="card-header"><i class="ti ti-shield"></i> Verification Actions</div>
+                <div class="card-body">
+                    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">
+                        @if (Model.IsVerified == true) {
+                            <text>This provider is currently verified. You can revoke their verification status if they no longer meet platform standards.</text>
+                        } else {
+                            <text>This provider is pending verification. Please review their submitted documents and business details before approving.</text>
+                        }
+                    </p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        @if (Model.IsVerified != true)
+                        {
+                            <a asp-action="ApproveProvider" asp-route-id="@Model.Id" class="action-btn-large btn-approve"><i class="ti ti-check"></i> Approve Verification</a>
+                        }
+                        else
+                        {
+                            <a asp-action="RejectProvider" asp-route-id="@Model.Id" class="action-btn-large btn-reject"><i class="ti ti-x"></i> Revoke Verification</a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offered Services -->
+            <div class="card">
+                <div class="card-header"><i class="ti ti-tools"></i> Offered Services (@(Model.Services?.Count ?? 0))</div>
+                <div class="table-wrap">
+                    @if (Model.Services != null && Model.Services.Any())
+                    {
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service Name</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(var s in Model.Services)
+                                {
+                                    <tr>
+                                        <td style="font-weight:500;">@s.Name</td>
+                                        <td style="font-weight:600;">₹@s.Price</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div style="text-align:center; padding: 32px; color:var(--text-muted);">
+                            <i class="ti ti-inbox" style="font-size: 32px; margin-bottom: 12px; display: block; color: var(--border);"></i>
+                            No services added yet.
+                        </div>
+                    }
+                </div>
+            </div>
+            
+        </div> <!-- /Right Column -->
+    </div>
+
+</div><!-- /page-wrap -->

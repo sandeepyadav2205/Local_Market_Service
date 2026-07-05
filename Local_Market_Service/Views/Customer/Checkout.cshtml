@@ -1,0 +1,461 @@
+@model Local_Market_Service.Models.Customer
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "_CustomerLayout";
+    string defaultAddress = "";
+    if (Model?.Address != null)
+    {
+        defaultAddress = string.Join(", ", new[] { Model.Address, Model.City, Model.State, Model.Pincode }
+            .Where(s => !string.IsNullOrEmpty(s)));
+    }
+}
+<style>
+    .checkout-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        max-width: 860px;
+        margin: 0 auto;
+        animation: fadeInUp .45s ease both;
+    }
+
+    /* ── Progress Steps ───────────────────────────────────── */
+    .progress-steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
+    }
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+    }
+    .step-circle {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+        transition: all .3s;
+    }
+    .step.done .step-circle { background: var(--accent); color: #fff; }
+    .step.active .step-circle { background: linear-gradient(135deg, #0f7a38, #1ecc60); color: #fff; box-shadow: 0 4px 14px rgba(30,204,96,.4); }
+    .step.idle .step-circle { background: var(--surface-2); color: var(--text-muted); border: 1.5px solid var(--border); }
+    .step-label {
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .step.done .step-label { color: var(--accent-txt); }
+    .step.active .step-label { color: var(--text); }
+    .step.idle .step-label { color: var(--text-muted); }
+    .step-connector {
+        height: 2px;
+        flex: 1;
+        background: var(--border);
+        margin: 0 4px;
+    }
+    .step-connector.done { background: var(--accent); }
+
+    /* ── Info Banner ──────────────────────────────────────── */
+    .info-banner {
+        background: linear-gradient(135deg, var(--green-bg), rgba(30,204,96,.05));
+        border: 1.5px solid rgba(30,204,96,.25);
+        border-radius: 16px;
+        padding: 18px 24px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        color: var(--green-txt);
+    }
+    .info-banner i { font-size: 24px; flex-shrink: 0; margin-top: 1px; }
+    .info-banner-text strong { font-weight: 700; font-size: 14px; display: block; margin-bottom: 4px; }
+    .info-banner-text p { font-size: 13px; opacity: .85; margin: 0; line-height: 1.5; }
+
+    /* ── Form Card ────────────────────────────────────────── */
+    .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .form-card-header {
+        background: linear-gradient(135deg, var(--surface-2), var(--surface));
+        border-bottom: 1px solid var(--border);
+        padding: 24px 32px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .form-card-icon {
+        width: 46px; height: 46px;
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+    .form-card-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 2px;
+    }
+    .form-card-sub { font-size: 13px; color: var(--text-muted); }
+    .form-card-body { padding: 32px; }
+
+    /* ── Form Elements ────────────────────────────────────── */
+    .form-group { margin-bottom: 24px; }
+    .form-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+    .form-label i { color: var(--accent); font-size: 15px; }
+    .required-star { color: var(--red-txt); margin-left: 2px; }
+    .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 15px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        transition: border-color .2s, box-shadow .2s, background .2s;
+        outline: none;
+    }
+    .form-control:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(30,204,96,.12);
+        background: var(--surface);
+    }
+    .form-control::placeholder { color: var(--text-muted); }
+    textarea.form-control { resize: vertical; min-height: 110px; }
+
+    .form-hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .form-hint i { font-size: 13px; }
+
+    /* ── Submit Button ────────────────────────────────────── */
+    .form-actions {
+        padding-top: 8px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .btn-confirm {
+        flex: 1;
+        background: linear-gradient(135deg, #0f7a38, #1ecc60);
+        color: #fff;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: transform .2s, box-shadow .2s;
+        box-shadow: 0 6px 20px rgba(30,204,96,.3);
+        min-width: 200px;
+    }
+    .btn-confirm:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(30,204,96,.4); }
+    .btn-back {
+        background: var(--bg);
+        color: var(--text-sec);
+        border: 1.5px solid var(--border);
+        padding: 16px 24px;
+        border-radius: 14px;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+    .btn-back:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Trust Badges ─────────────────────────────────────── */
+    .trust-row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .trust-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+    .trust-item i { font-size: 18px; color: var(--accent); }
+
+    @@media (max-width: 580px) {
+        .form-card-body { padding: 20px; }
+        .form-card-header { padding: 18px 20px; }
+        .progress-steps { display: none; }
+        .form-actions { flex-direction: column; }
+        .btn-confirm, .btn-back { width: 100%; justify-content: center; }
+    }
+</style>
+
+<div class="checkout-wrap">
+
+    <!-- ── Progress Indicator ──────────────────────────────── -->
+    <div class="progress-steps">
+        <div class="step done">
+            <div class="step-circle"><i class="ti ti-check"></i></div>
+            <div class="step-label">Cart</div>
+        </div>
+        <div class="step-connector done"></div>
+        <div class="step active">
+            <div class="step-circle">2</div>
+            <div class="step-label">Checkout</div>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step idle">
+            <div class="step-circle">3</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
+
+    <!-- ── Info Banner ─────────────────────────────────────── -->
+    <div class="info-banner">
+        <i class="ti ti-shield-check"></i>
+        <div class="info-banner-text">
+            <strong>No Online Payment Required</strong>
+            <p>All payments are handled offline directly with the service provider after the service is completed. Your booking is free to place.</p>
+        </div>
+    </div>
+
+    <!-- ── Booking Details Form ─────────────────────────────── -->
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon"><i class="ti ti-calendar-event"></i></div>
+            <div>
+                <div class="form-card-title">Booking Details</div>
+                <div class="form-card-sub">Fill in the details to complete your booking</div>
+            </div>
+        </div>
+        <div class="form-card-body">
+            <form asp-action="Checkout" method="post" id="checkoutForm">
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-calendar"></i>
+                        Service Date <span class="required-star">*</span>
+                    </label>
+                    <input type="date" id="ServiceDate" name="ServiceDate" class="form-control"
+                           required min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <div class="form-hint">
+                        <i class="ti ti-info-circle"></i>
+                        Choose a date when you'd like the service to be performed.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-map-pin"></i>
+                        Service Address <span class="required-star">*</span>
+                    </label>
+                    <textarea id="Address" name="Address" class="form-control"
+                              placeholder="Enter your full address (Street, Area, City, Pincode)"
+                              required>@defaultAddress</textarea>
+                    <div class="form-hint">
+                        <i class="ti ti-info-circle"></i>
+                        The provider will visit this address to deliver the service.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-message"></i>
+                        Special Remarks
+                    </label>
+                    <textarea id="Remark" name="Remark" class="form-control"
+                              placeholder="Any specific requirements, preferred time, or special instructions for the provider?"></textarea>
+                    <div class="form-hint">
+                        <i class="ti ti-info-circle"></i>
+                        Optional — helps providers prepare better for your service.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-credit-card"></i>
+                        Payment Method <span class="required-star">*</span>
+                    </label>
+                    <select id="PaymentMethod" name="PaymentMethod" class="form-control" required>
+                        <option value="Cash">Cash on Delivery</option>
+                        <option value="Online">Pay Online</option>
+                    </select>
+                    <div class="form-hint">
+                        <i class="ti ti-info-circle"></i>
+                        Select your preferred payment method.
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a asp-action="Cart" class="btn-back">
+                        <i class="ti ti-arrow-left"></i> Back to Cart
+                    </a>
+                    <button type="button" class="btn-confirm" id="confirmBtn" onclick="confirmCheckout()">
+                        <i class="ti ti-calendar-check"></i> Confirm Booking
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Trust Badges ─────────────────────────────────────── -->
+    <div class="trust-row">
+        <div class="trust-item"><i class="ti ti-shield-check"></i> Verified Providers</div>
+        <div class="trust-item"><i class="ti ti-clock"></i> On-Time Service</div>
+        <div class="trust-item"><i class="ti ti-headset"></i> 24/7 Support</div>
+        <div class="trust-item"><i class="ti ti-star"></i> Quality Guaranteed</div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Checkout";
+        document.getElementById("page-crumb").innerText = "Checkout";
+
+        // Set min date for service date input
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("ServiceDate").setAttribute("min", today);
+    });
+
+    function confirmCheckout() {
+        const form = document.getElementById("checkoutForm");
+        
+        // Basic HTML5 Validation Check
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const paymentMethod = document.getElementById("PaymentMethod").value;
+        const paymentMap = {
+            'Cash': { text: 'Cash on Delivery', icon: 'ti-cash', color: '#10b981' },
+            'Online': { text: 'Pay Online', icon: 'ti-device-mobile-message', color: '#6366f1' }
+        };
+        const pMode = paymentMap[paymentMethod];
+
+        Swal.fire({
+            title: '<span style="font-family: \'Outfit\', sans-serif; font-weight: 700; font-size: 24px; color: var(--text);">Confirm Your Booking</span>',
+            html: `
+                <div style="text-align: left; margin-top: 10px;">
+                    <p style="color: var(--text-sec); font-size: 15px; margin-bottom: 20px;">You are about to finalize your booking. Please review your selected payment method below.</p>
+                    <div style="background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(30, 204, 96, 0.1); color: ${pMode.color}; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                            <i class="ti ${pMode.icon}"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Payment Method</div>
+                            <div style="font-size: 17px; font-weight: 700; color: var(--text); font-family: 'Outfit', sans-serif;">${pMode.text}</div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#1ecc60',
+            cancelButtonColor: '#f1f5f9',
+            confirmButtonText: '<i class="ti ti-check" style="margin-right: 6px;"></i> Yes, Place Booking',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                popup: 'swal-premium-popup',
+                confirmButton: 'swal-premium-confirm',
+                cancelButton: 'swal-premium-cancel'
+            },
+            buttonsStyling: false,
+            showClass: {
+                popup: 'animate__animated animate__zoomIn animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__zoomOut animate__faster'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const btn = document.getElementById("confirmBtn");
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader-2" style="animation: spin 1s linear infinite;"></i> Placing Booking...';
+                
+                form.submit();
+            }
+        });
+    }
+</script>
+
+<style>
+    /* Premium SweetAlert Styling */
+    .swal-premium-popup {
+        border-radius: 24px !important;
+        padding: 32px !important;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12) !important;
+        background: var(--surface) !important;
+        border: 1px solid var(--border) !important;
+    }
+    .swal-premium-confirm {
+        background: linear-gradient(135deg, #0f7a38, #1ecc60) !important;
+        color: #fff !important;
+        border: none !important;
+        padding: 14px 28px !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        box-shadow: 0 4px 14px rgba(30,204,96,0.3) !important;
+        transition: transform 0.2s, box-shadow 0.2s !important;
+        margin: 0 8px !important;
+    }
+    .swal-premium-confirm:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(30,204,96,0.4) !important;
+    }
+    .swal-premium-cancel {
+        background: var(--bg) !important;
+        color: var(--text-sec) !important;
+        border: 1.5px solid var(--border) !important;
+        padding: 14px 24px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        transition: background 0.2s, color 0.2s !important;
+        margin: 0 8px !important;
+    }
+    .swal-premium-cancel:hover {
+        background: var(--surface-2) !important;
+        color: var(--text) !important;
+    }
+</style>

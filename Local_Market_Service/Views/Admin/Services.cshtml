@@ -1,0 +1,171 @@
+@{
+    ViewData["Title"] = "Services";
+    Layout = "_AdminLayout";
+}
+
+@model ICollection<Local_Market_Service.Models.Service>
+
+<style>
+    .page-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .admin-stat {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+        padding: 22px 20px; box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s;
+        position: relative; overflow: hidden;
+    }
+    .admin-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .admin-stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
+    
+    .ast-blue::after { background: var(--blue); }
+    .ast-green::after { background: var(--green); }
+
+    .stat-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px; }
+    .ast-blue .stat-icon-wrap { background: var(--blue-bg); color: var(--blue-txt); }
+    .ast-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+
+    .stat-val { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; display:flex; justify-content:space-between; }
+
+    /* ── Table Card ──────────────────────────────────────── */
+    .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+    .sec-card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .sec-card-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .sec-card-title i { color: var(--accent); font-size: 20px; }
+
+    .head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box i { position: absolute; left: 14px; color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    .search-box input { padding: 10px 14px 10px 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; font-size: 14px; width: 260px; transition: border-color .2s; }
+    .search-box input:focus { outline: none; border-color: var(--accent); }
+
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th { padding: 14px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
+    .dash-table td { padding: 16px 24px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: var(--surface-2); }
+
+    .svc-icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border); flex-shrink:0; }
+    .svc-icon-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .s-badge { font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+    .sb-active { background: #d1fae5; color: #065f46; }
+    .sb-inactive { background: #fee2e2; color: #991b1b; }
+    
+    .cat-tag { font-size: 12px; font-weight: 600; color: var(--text-muted); background: var(--surface); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@media(max-width: 768px) { .admin-stats { grid-template-columns: 1fr; } .search-box input { width: 100%; } }
+</style>
+
+<div class="page-wrap">
+    <!-- Header -->
+    <div class="section-header" style="margin-bottom:0;">
+        <div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px;">All Services</h1>
+            <p style="color:var(--text-muted); font-size:14px;">View all active and inactive services across the marketplace.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <div class="admin-stat ast-blue">
+            <div class="stat-icon-wrap"><i class="ti ti-tools"></i></div>
+            <div class="stat-val">@Model.Count</div>
+            <div class="stat-lbl">Total Services</div>
+        </div>
+        <div class="admin-stat ast-green">
+            <div class="stat-icon-wrap"><i class="ti ti-check"></i></div>
+            <div class="stat-val">@Model.Count(s => (s.Status ?? "").ToLower() != "inactive")</div>
+            <div class="stat-lbl">Active Services</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="sec-card">
+        <div class="sec-card-head">
+            <div class="sec-card-title"><i class="ti ti-list-details"></i> Service Directory</div>
+            <div class="head-actions">
+                <div class="search-box">
+                    <i class="ti ti-search"></i>
+                    <input type="text" id="svc-search" onkeyup="filterTable()" placeholder="Search services..." />
+                </div>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Category</th>
+                        <th>Provider</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="svc-tbody">
+                    @foreach(var s in Model.OrderByDescending(x => x.CreatedAt))
+                    {
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div class="svc-icon-wrap">
+                                        @if(!string.IsNullOrEmpty(s.ImageUrl)) {
+                                            <img src="/Images/@s.ImageUrl" onerror="this.style.display='none'" />
+                                        } else {
+                                            <i class="ti ti-tool" style="font-size: 20px; color: var(--text-muted);"></i>
+                                        }
+                                    </div>
+                                    <div style="font-weight: 700; color: var(--text);">@s.Name</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="cat-tag"><i class="ti ti-tag"></i> @(s.Category?.Name ?? "Uncategorized")</span>
+                            </td>
+                            <td style="font-weight: 500;">
+                                <a href="/Admin/ViewProvider/@s.ProviderId" style="text-decoration:none; color:var(--text); transition:color .2s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text)'">
+                                    @(s.Provider?.ApplicationUser?.FullName ?? "Unknown")
+                                </a>
+                            </td>
+                            <td style="font-weight: 700; color: var(--green-txt);">₹@s.Price</td>
+                            <td>
+                                @if ((s.Status ?? "active").ToLower() == "active")
+                                {
+                                    <span class="s-badge sb-active">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="s-badge sb-inactive">Inactive</span>
+                                }
+                            </td>
+                            <td style="color: var(--text-muted); font-size: 13px;">@s.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                    @if(!Model.Any()) {
+                        <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">No services found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Services";
+        document.getElementById("page-crumb").innerText = "Services";
+    });
+
+    function filterTable() {
+        const query = document.getElementById('svc-search').value.toLowerCase();
+        const rows = document.querySelectorAll('#svc-tbody tr');
+        rows.forEach(row => {
+            if(row.children.length === 1) return;
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+</script>

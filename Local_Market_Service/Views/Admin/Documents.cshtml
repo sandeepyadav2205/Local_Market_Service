@@ -1,0 +1,218 @@
+@{
+    ViewData["Title"] = "Provider Documents";
+    Layout = "_AdminLayout";
+}
+
+@model ICollection<Local_Market_Service.Models.Provider>
+
+<style>
+    .page-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .admin-stat {
+        background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+        padding: 22px 20px; box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s;
+        position: relative; overflow: hidden;
+    }
+    .admin-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .admin-stat::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 18px 18px 0 0; }
+    
+    .ast-amber::after { background: var(--amber); }
+    .ast-green::after { background: var(--green); }
+
+    .stat-icon-wrap { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 14px; }
+    .ast-amber .stat-icon-wrap { background: var(--amber-bg); color: var(--amber-txt); }
+    .ast-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+
+    .stat-val { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; display:flex; justify-content:space-between; }
+
+    /* ── Table Card ──────────────────────────────────────── */
+    .sec-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow); }
+    .sec-card-head { padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .sec-card-title { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .sec-card-title i { color: var(--accent); font-size: 20px; }
+
+    .head-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    
+    .search-box { position: relative; display: flex; align-items: center; }
+    .search-box i { position: absolute; left: 14px; color: var(--text-muted); font-size: 16px; pointer-events: none; }
+    .search-box input { padding: 10px 14px 10px 40px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: inherit; font-size: 14px; width: 260px; transition: border-color .2s; }
+    .search-box input:focus { outline: none; border-color: var(--accent); }
+
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th { padding: 14px 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); background: var(--bg); border-bottom: 1px solid var(--border); text-align: left; }
+    .dash-table td { padding: 16px 24px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: var(--surface-2); }
+
+    .user-block { display: flex; align-items: center; gap: 12px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: var(--text-sec); border: 1px solid var(--border); overflow: hidden; }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info { display: flex; flex-direction: column; }
+    .user-name { font-weight: 700; color: var(--text); text-decoration: none; transition: color .2s; }
+    .user-name:hover { color: var(--accent); }
+    .user-sub { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+    .doc-preview-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); text-decoration: none; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+    .doc-preview-link:hover { background: var(--bg); border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+    .s-badge { font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; text-transform: capitalize; }
+    .sb-approved { background: #d1fae5; color: #065f46; }
+    .sb-pending { background: #fef3c7; color: #92400e; }
+    .sb-rejected { background: #fee2e2; color: #991b1b; }
+
+    .action-btns { display: flex; gap: 8px; }
+    .btn-action { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 8px; font-size: 18px; transition: all .2s; border: 1px solid transparent; text-decoration: none; cursor: pointer; }
+    .ba-approve { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,.2); }
+    .ba-approve:hover { background: var(--green); color: #fff; }
+    .ba-reject { background: var(--red-bg); color: var(--red); border-color: rgba(239,68,68,.2); }
+    .ba-reject:hover { background: var(--red); color: #fff; }
+
+    @@keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@media(max-width: 768px) { .admin-stats { grid-template-columns: 1fr; } .search-box input { width: 100%; } }
+</style>
+
+<div class="page-wrap">
+    <!-- Header -->
+    <div class="section-header" style="margin-bottom:0;">
+        <div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px;">Provider Documents</h1>
+            <p style="color:var(--text-muted); font-size:14px;">Verify and manage provider KYC documents.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <div class="admin-stat ast-amber">
+            <div class="stat-icon-wrap"><i class="ti ti-file-alert"></i></div>
+            <div class="stat-val">@Model.Count(p => p.ProviderDocument?.Status?.ToLower() == "pending")</div>
+            <div class="stat-lbl">Pending Verification</div>
+        </div>
+        <div class="admin-stat ast-green">
+            <div class="stat-icon-wrap"><i class="ti ti-file-check"></i></div>
+            <div class="stat-val">@Model.Count(p => p.ProviderDocument?.Status?.ToLower() == "approved")</div>
+            <div class="stat-lbl">Approved Documents</div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="sec-card">
+        <div class="sec-card-head">
+            <div class="sec-card-title"><i class="ti ti-files"></i> Document List</div>
+            <div class="head-actions">
+                <div class="search-box">
+                    <i class="ti ti-search"></i>
+                    <input type="text" id="doc-search" onkeyup="filterTable()" placeholder="Search documents..." />
+                </div>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Provider</th>
+                        <th>Document Details</th>
+                        <th>Document Preview</th>
+                        <th>Uploaded On</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="doc-tbody">
+                    @foreach(var p in Model)
+                    {
+                        var doc = p.ProviderDocument;
+                        if (doc != null)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="user-block">
+                                        <div class="user-avatar">
+                                            @if(!string.IsNullOrEmpty(p.ApplicationUser?.profileImage)) {
+                                                <img src="/Images/@p.ApplicationUser.profileImage" onerror="this.style.display='none'" />
+                                            } else {
+                                                <i class="ti ti-briefcase"></i>
+                                            }
+                                        </div>
+                                        <div class="user-info">
+                                            <a href="/Admin/ViewProvider/@p.Id" class="user-name">@(p.ApplicationUser?.FullName ?? "Unknown")</a>
+                                            <span class="user-sub">@(p.ApplicationUser?.Email ?? "—")</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--text);">@(doc.DocumentType ?? "Identity Document")</div>
+                                    <div style="font-size: 13px; color: var(--text-muted); font-family: monospace;">#(doc.DocumentNumber ?? "N/A")</div>
+                                </td>
+                                <td>
+                                    @if(!string.IsNullOrEmpty(doc.DocumentUrl))
+                                    {
+                                        <a href="/Images/@doc.DocumentUrl" target="_blank" class="doc-preview-link">
+                                            <i class="ti ti-external-link" style="color:var(--accent);"></i> View File
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: var(--text-muted); font-size: 13px; font-style: italic;">No file</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: var(--text);">@doc.UploadedAt.ToString("MMM dd, yyyy")</div>
+                                    <div style="font-size: 12px; color: var(--text-muted);"><i class="ti ti-clock"></i> @doc.UploadedAt.ToString("hh:mm tt")</div>
+                                </td>
+                                <td>
+                                    @{
+                                        string stat = doc.Status?.ToLower() ?? "pending";
+                                        string bClass = stat == "rejected" ? "sb-rejected" : (stat == "pending" ? "sb-pending" : "sb-approved");
+                                    }
+                                    <span class="s-badge @bClass">@(doc.Status ?? "Pending")</span>
+                                </td>
+                                <td>
+                                    <div class="action-btns" style="justify-content:flex-end;">
+                                        @if (stat == "pending")
+                                        {
+                                            <a asp-action="ApproveProvider" asp-route-id="@p.Id" class="btn-action ba-approve" title="Approve">
+                                                <i class="ti ti-check"></i>
+                                            </a>
+                                            <a asp-action="RejectProvider" asp-route-id="@p.Id" class="btn-action ba-reject" title="Reject">
+                                                <i class="ti ti-x"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="ViewProvider" asp-route-id="@p.Id" class="doc-preview-link" style="padding:8px 12px; margin:0;">
+                                                <i class="ti ti-user-circle" style="font-size:16px;"></i> Profile
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    @if(!Model.Any(p => p.ProviderDocument != null)) {
+                        <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--text-muted);">No documents pending verification.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Documents";
+        document.getElementById("page-crumb").innerText = "Documents";
+    });
+
+    function filterTable() {
+        const query = document.getElementById('doc-search').value.toLowerCase();
+        const rows = document.querySelectorAll('#doc-tbody tr');
+        rows.forEach(row => {
+            if(row.children.length === 1) return;
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+</script>

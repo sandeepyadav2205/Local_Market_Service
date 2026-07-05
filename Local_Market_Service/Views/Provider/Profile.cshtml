@@ -1,0 +1,374 @@
+@model Provider
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "_ProviderLayout";
+    string dp = Model?.ApplicationUser?.profileImage ?? "default.jpg";
+    string memberSince = Model?.CreatedAt.ToString("MMMM yyyy") ?? "";
+}
+<style>
+    .prof-wrap { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; animation: fadeInUp .45s ease both; }
+
+    /* ── Sidebar ─────────────────────────────────────────── */
+    .prof-left { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+    .prof-id-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
+    }
+    .prof-banner { background: linear-gradient(135deg, #0d6e31, #1ecc60); height: 76px; }
+    .prof-av-wrap {
+        width: 88px; height: 88px;
+        margin: -44px auto 0;
+        position: relative; z-index: 2;
+    }
+    .prof-av-img {
+        width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+        border: 4px solid var(--surface); box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    }
+    .prof-av-cam {
+        position: absolute; bottom: 2px; right: 2px;
+        width: 28px; height: 28px;
+        background: var(--accent); color: #fff; border-radius: 50%;
+        border: 2.5px solid var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; cursor: pointer;
+        transition: transform .2s, background .2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .prof-av-cam:hover { transform: scale(1.15); background: #0f7a38; }
+    .prof-id-body { padding: 14px 18px 18px; text-align: center; }
+    .prof-biz-name { font-family:'Outfit',sans-serif; font-size:18px; font-weight:800; color:var(--text); margin-bottom:2px; }
+    .prof-full-name { font-size:13px; color:var(--text-muted); margin-bottom:10px; }
+    .verify-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 14px; border-radius: 20px;
+        font-size: 12px; font-weight: 700; margin-bottom: 14px;
+    }
+    .vc-verified { background: #d1fae5; color: #065f46; }
+    .vc-pending { background: #fef3c7; color: #92400e; }
+    .prof-chips { display: flex; flex-direction: column; gap: 7px; }
+    .prof-chip {
+        display: flex; align-items: center; gap: 9px;
+        padding: 8px 12px; background: var(--bg);
+        border: 1px solid var(--border); border-radius: 9px;
+        font-size: 13px; color: var(--text-sec); font-weight: 500; text-align: left;
+    }
+    .prof-chip i { font-size: 15px; color: var(--accent); flex-shrink: 0; width: 16px; }
+
+    /* ── Right Form ──────────────────────────────────────── */
+    .prof-right { display: flex; flex-direction: column; gap: 18px; }
+    .sec-card {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 20px; overflow: hidden; box-shadow: var(--shadow);
+    }
+    .sec-head {
+        padding: 18px 26px; border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+        display: flex; align-items: center; gap: 12px;
+    }
+    .sec-icon {
+        width: 38px; height: 38px; border-radius: 11px;
+        display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0;
+    }
+    .si-green { background: var(--accent-bg); color: var(--accent-txt); }
+    .si-blue  { background: #dbeafe; color: #1d4ed8; }
+    .si-purple { background: var(--purple-bg); color: var(--purple-txt); }
+    .sec-title { font-family:'Outfit',sans-serif; font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
+    .sec-sub { font-size:12px; color:var(--text-muted); }
+    .sec-body { padding: 26px; }
+
+    /* ── Form Fields ─────────────────────────────────────── */
+    .fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .fg-full { grid-column: 1 / -1; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field-lbl {
+        font-size: 11.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .05em;
+        color: var(--text-sec); display: flex; align-items: center; gap: 6px;
+    }
+    .field-lbl i { font-size: 13px; color: var(--accent); }
+    .field-inp {
+        width: 100%; padding: 12px 14px;
+        border: 1.5px solid var(--border); border-radius: 11px;
+        font-size: 14.5px; background: var(--bg); color: var(--text);
+        font-family: inherit; outline: none;
+        transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .field-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(30,204,96,.12); background: var(--surface); }
+    .field-inp[readonly] { background: var(--surface-2); color: var(--text-muted); cursor: not-allowed; border-style: dashed; }
+    .field-inp::placeholder { color: var(--text-muted); }
+    textarea.field-inp { resize: vertical; min-height: 90px; }
+
+    /* ── Photo Upload ────────────────────────────────────── */
+    .photo-area {
+        display: flex; align-items: center; gap: 16px;
+        border: 2px dashed var(--border); border-radius: 12px;
+        padding: 16px; cursor: pointer;
+        transition: border-color .2s, background .2s; background: var(--bg);
+    }
+    .photo-area:hover { border-color: var(--accent); background: var(--accent-bg); }
+    .photo-thumb { width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border); flex-shrink:0; }
+    .photo-info strong { display:block; font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; }
+    .photo-info span { font-size:12px; color:var(--text-muted); }
+    .photo-btn-tag {
+        margin-left: auto; flex-shrink: 0;
+        background: var(--accent-bg); color: var(--accent-txt);
+        border: 1px solid rgba(30,204,96,.3); border-radius: 9px;
+        padding: 8px 14px; font-size: 13px; font-weight: 700;
+        display: flex; align-items: center; gap: 6px; pointer-events: none;
+    }
+
+    /* ── Success Alert ───────────────────────────────────── */
+    .success-toast {
+        background: linear-gradient(90deg,#d1fae5,#f0fdf4);
+        border: 1.5px solid rgba(30,204,96,.4);
+        color: #065f46; padding: 14px 20px; border-radius: 14px;
+        display: flex; align-items: center; gap: 12px;
+        font-weight: 600; font-size: 14px;
+        animation: fadeInDown .4s ease both;
+        box-shadow: 0 4px 14px rgba(30,204,96,.12);
+    }
+    .success-toast i { font-size: 22px; color: #16a34a; }
+
+    /* ── Save Bar ────────────────────────────────────────── */
+    .save-bar {
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 16px; padding: 16px 22px;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; box-shadow: var(--shadow); flex-wrap: wrap;
+    }
+    .save-hint { font-size:13px; color:var(--text-muted); display:flex; align-items:center; gap:7px; }
+    .save-hint i { color:var(--accent); }
+    .save-actions { display:flex; gap:10px; }
+    .btn-cancel {
+        background: var(--bg); color: var(--text-sec);
+        border: 1.5px solid var(--border); padding: 10px 18px;
+        border-radius: 10px; font-size:14px; font-weight:600;
+        cursor: pointer; font-family:inherit;
+        display:flex; align-items:center; gap:7px; text-decoration:none;
+        transition: all .2s;
+    }
+    .btn-cancel:hover { background: var(--surface-2); color: var(--text); }
+    .btn-save {
+        background: linear-gradient(135deg, #0f7a38, #1ecc60);
+        color: #fff; border: none; padding: 10px 26px;
+        border-radius: 10px; font-weight: 700; font-size: 15px;
+        cursor: pointer; display: flex; align-items: center; gap: 8px;
+        transition: transform .2s, box-shadow .2s;
+        box-shadow: 0 4px 16px rgba(30,204,96,.25); font-family:inherit;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(30,204,96,.35); }
+
+    @@media (max-width: 860px) {
+        .prof-wrap { grid-template-columns: 1fr; }
+        .prof-left { position: static; }
+        .fg2 { grid-template-columns: 1fr; }
+    }
+    @@media (max-width: 520px) {
+        .save-bar { flex-direction: column; align-items: stretch; }
+        .save-actions { flex-direction: column; }
+        .btn-save, .btn-cancel { justify-content: center; }
+    }
+</style>
+
+<div class="prof-wrap">
+
+    <!-- ── LEFT SIDEBAR ── -->
+    <aside class="prof-left">
+        <div class="prof-id-card">
+            <div class="prof-banner"></div>
+            <div class="prof-av-wrap">
+                <img src="/Images/@dp" id="avatarPreview" class="prof-av-img"
+                     onerror="this.src='/Images/default.jpg';" alt="Profile" />
+                <label for="imgFile" class="prof-av-cam" title="Change photo">
+                    <i class="ti ti-camera"></i>
+                </label>
+            </div>
+            <div class="prof-id-body">
+                <div class="prof-biz-name">@(Model?.BusinessName ?? "Business Name")</div>
+                <div class="prof-full-name">@(Model?.ApplicationUser?.FullName ?? "Provider")</div>
+                @if (Model?.IsVerified == true)
+                {
+                    <div class="verify-chip vc-verified"><i class="ti ti-shield-check"></i> Verified</div>
+                }
+                else
+                {
+                    <div class="verify-chip vc-pending"><i class="ti ti-clock"></i> Pending Verification</div>
+                }
+                <div class="prof-chips">
+                    @if (!string.IsNullOrEmpty(Model?.ApplicationUser?.Email))
+                    {
+                        <div class="prof-chip"><i class="ti ti-mail"></i> <span style="word-break:break-all;">@Model.ApplicationUser.Email</span></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model?.ApplicationUser?.PhoneNumber))
+                    {
+                        <div class="prof-chip"><i class="ti ti-phone"></i> @Model.ApplicationUser.PhoneNumber</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model?.Experience))
+                    {
+                        <div class="prof-chip"><i class="ti ti-briefcase"></i> @Model.Experience experience</div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model?.City))
+                    {
+                        <div class="prof-chip"><i class="ti ti-map-pin"></i> @string.Join(", ", new[] { Model.City, Model.State }.Where(s => !string.IsNullOrEmpty(s)))</div>
+                    }
+                    @if (!string.IsNullOrEmpty(memberSince))
+                    {
+                        <div class="prof-chip"><i class="ti ti-calendar-stats"></i> Since @memberSince</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ── RIGHT FORM AREA ── -->
+    <div class="prof-right">
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="success-toast">
+                <i class="ti ti-circle-check"></i>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        <form asp-action="Profile" method="post" enctype="multipart/form-data" id="profForm">
+            <input type="file" id="imgFile" name="ImageFile" style="display:none;" accept="image/*" onchange="handlePic(event)" />
+
+            <!-- Personal Info -->
+            <div class="sec-card" style="margin-bottom:18px;">
+                <div class="sec-head">
+                    <div class="sec-icon si-green"><i class="ti ti-user-circle"></i></div>
+                    <div>
+                        <div class="sec-title">Personal Information</div>
+                        <div class="sec-sub">Your contact and identity details</div>
+                    </div>
+                </div>
+                <div class="sec-body">
+                    <!-- Photo Upload -->
+                    <div class="field" style="margin-bottom:20px;">
+                        <label class="field-lbl"><i class="ti ti-photo"></i> Profile Photo</label>
+                        <label for="imgFile" class="photo-area">
+                            <img src="/Images/@dp" id="photoThumb" class="photo-thumb" onerror="this.src='/Images/default.jpg';" />
+                            <div class="photo-info">
+                                <strong id="photoLbl">Click to change photo</strong>
+                                <span>JPG, PNG, WEBP — Max 5MB</span>
+                            </div>
+                            <div class="photo-btn-tag"><i class="ti ti-upload"></i> Upload</div>
+                        </label>
+                    </div>
+                    <div class="fg2">
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-user"></i> Full Name</label>
+                            <input name="ApplicationUser.FullName" class="field-inp"
+                                   value="@Model?.ApplicationUser?.FullName" placeholder="Your full name" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-phone"></i> Phone Number</label>
+                            <input name="ApplicationUser.PhoneNumber" class="field-inp"
+                                   value="@Model?.ApplicationUser?.PhoneNumber" placeholder="10-digit mobile" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-mail"></i> Email Address</label>
+                            <input class="field-inp" value="@Model?.ApplicationUser?.Email" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Info -->
+            <div class="sec-card" style="margin-bottom:18px;">
+                <div class="sec-head">
+                    <div class="sec-icon si-blue"><i class="ti ti-building-store"></i></div>
+                    <div>
+                        <div class="sec-title">Business Information</div>
+                        <div class="sec-sub">Details about your service business</div>
+                    </div>
+                </div>
+                <div class="sec-body">
+                    <div class="fg2">
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-briefcase"></i> Business Name</label>
+                            <input asp-for="BusinessName" class="field-inp" placeholder="e.g. Sharma Electricals" />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-award"></i> Experience</label>
+                            <input asp-for="Experience" class="field-inp" placeholder="e.g. 5 Years" />
+                        </div>
+                        <div class="field fg-full">
+                            <label class="field-lbl"><i class="ti ti-file-description"></i> Business Description</label>
+                            <textarea asp-for="Description" class="field-inp" rows="3"
+                                      placeholder="Describe your services, specialization..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="sec-card" style="margin-bottom:18px;">
+                <div class="sec-head">
+                    <div class="sec-icon si-purple"><i class="ti ti-map-pin"></i></div>
+                    <div>
+                        <div class="sec-title">Service Location</div>
+                        <div class="sec-sub">Your operating area and address</div>
+                    </div>
+                </div>
+                <div class="sec-body">
+                    <div class="fg2">
+                        <div class="field fg-full">
+                            <label class="field-lbl"><i class="ti ti-home"></i> Street Address</label>
+                            <input asp-for="Address" class="field-inp" placeholder="House no., Street, Area" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-building-community"></i> City</label>
+                            <input asp-for="City" class="field-inp" placeholder="e.g. Lucknow" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-map-2"></i> State</label>
+                            <input asp-for="State" class="field-inp" placeholder="e.g. Uttar Pradesh" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-lbl"><i class="ti ti-hash"></i> Pincode</label>
+                            <input asp-for="Pincode" class="field-inp" placeholder="6-digit pincode" maxlength="6" required />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Bar -->
+            <div class="save-bar">
+                <div class="save-hint"><i class="ti ti-shield-check"></i> Changes saved securely to your account.</div>
+                <div class="save-actions">
+                    <button type="reset" class="btn-cancel"><i class="ti ti-rotate"></i> Reset</button>
+                    <button type="submit" class="btn-save" id="saveBtn">
+                        <i class="ti ti-device-floppy"></i> Save Profile
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "My Profile";
+        document.getElementById("page-crumb").innerText = "Profile";
+        document.getElementById("profForm").addEventListener("submit", () => {
+            const btn = document.getElementById("saveBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;display:inline-block;"></i> Saving...';
+        });
+    });
+    function handlePic(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const r = new FileReader();
+        r.onload = function(ev) {
+            document.getElementById("avatarPreview").src = ev.target.result;
+            document.getElementById("photoThumb").src = ev.target.result;
+            document.getElementById("photoLbl").textContent = file.name;
+        };
+        r.readAsDataURL(file);
+    }
+</script>

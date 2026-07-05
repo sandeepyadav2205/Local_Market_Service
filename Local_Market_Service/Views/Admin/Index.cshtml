@@ -1,0 +1,359 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .dash-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .admin-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 20px;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+        text-decoration: none;
+        display: block;
+    }
+    .admin-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .admin-stat::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 18px 18px 0 0;
+    }
+    .ast-blue::after { background: var(--blue); }
+    .ast-green::after { background: var(--green); }
+    .ast-amber::after { background: var(--amber); }
+    .ast-purple::after { background: var(--purple); }
+
+    .stat-icon-wrap {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        margin-bottom: 14px;
+    }
+    .ast-blue .stat-icon-wrap { background: var(--blue-bg); color: var(--blue-txt); }
+    .ast-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+    .ast-amber .stat-icon-wrap { background: var(--amber-bg); color: var(--amber-txt); }
+    .ast-purple .stat-icon-wrap { background: var(--purple-bg); color: var(--purple-txt); }
+
+    .stat-val {
+        font-family: 'Outfit', sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 600; display:flex; justify-content:space-between; }
+    .stat-badge { font-size: 11px; padding: 2px 6px; border-radius: 6px; font-weight: 700; }
+    
+    /* ── Layout Grids ────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+    .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .sec-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        display: flex; flex-direction: column;
+    }
+    .sec-card-head {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .sec-card-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sec-card-title i { color: var(--accent); }
+    .sec-view-all {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent-txt);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        background: var(--accent-bg);
+        border: 1px solid rgba(30,204,96,.2);
+        transition: all .2s;
+    }
+    .sec-view-all:hover { background: var(--accent); color: #fff; }
+
+    /* ── Tables ──────────────────────────────────────────── */
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th {
+        padding: 12px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .06em; color: var(--text-muted); background: var(--bg);
+        border-bottom: 1px solid var(--border); text-align: left;
+    }
+    .dash-table td { padding: 14px 20px; font-size: 14px; color: var(--text); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: var(--bg); }
+
+    /* ── Lists ───────────────────────────────────────────── */
+    .item-list { display: flex; flex-direction: column; }
+    .list-item {
+        display: flex; align-items: center; padding: 14px 24px;
+        border-bottom: 1px solid var(--border); gap: 14px;
+        transition: background .2s; text-decoration: none;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: var(--bg); }
+    .item-avatar {
+        width: 38px; height: 38px; border-radius: 10px;
+        background: var(--amber-bg); color: var(--amber-txt);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+    .item-info { flex: 1; overflow: hidden; }
+    .item-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-sub { font-size: 12px; color: var(--text-muted); }
+    .item-action {
+        width: 32px; height: 32px; border-radius: 8px;
+        background: var(--surface-2); color: var(--text-sec);
+        display: flex; align-items: center; justify-content: center;
+        transition: all .2s; border: 1px solid var(--border);
+    }
+    .list-item:hover .item-action { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Progress Bars ───────────────────────────────────── */
+    .pb-wrap { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .pb-fill { height: 100%; border-radius: 4px; }
+
+    .s-badge { font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+    .sb-pending { background: #fef3c7; color: #92400e; }
+    .sb-completed { background: #d1fae5; color: #065f46; }
+    .sb-cancelled { background: #fee2e2; color: #991b1b; }
+
+    @@media (max-width: 1024px) { .grid-2, .grid-half { grid-template-columns: 1fr; } }
+    @@media (max-width: 768px) { .admin-stats { grid-template-columns: 1fr 1fr; } }
+    @@media (max-width: 480px) { .admin-stats { grid-template-columns: 1fr; } }
+</style>
+
+<div class="dash-wrap">
+    <div class="section-header" style="margin-bottom:0;">
+        <div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px;">Dashboard Overview</h1>
+            <p style="color:var(--text-muted); font-size:14px;">Welcome to the admin control center.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="admin-stats">
+        <a href="/Admin/Customers" class="admin-stat ast-blue">
+            <div class="stat-icon-wrap"><i class="ti ti-users"></i></div>
+            <div class="stat-val">@ViewBag.TotalCustomers</div>
+            <div class="stat-lbl">
+                Total Customers
+                @if(ViewBag.ThisMonthCustomer > 0) {
+                    <span class="stat-badge" style="background:var(--blue-bg);color:var(--blue-txt);">+@ViewBag.ThisMonthCustomer this mo</span>
+                }
+            </div>
+        </a>
+        <a href="/Admin/Providers" class="admin-stat ast-green">
+            <div class="stat-icon-wrap"><i class="ti ti-briefcase"></i></div>
+            <div class="stat-val">@ViewBag.TotalVerifiedProviders</div>
+            <div class="stat-lbl">
+                Verified Providers
+                @if(ViewBag.TotalPendingProviders > 0) {
+                    <span class="stat-badge" style="background:var(--amber-bg);color:var(--amber-txt);">@ViewBag.TotalPendingProviders pending</span>
+                }
+            </div>
+        </a>
+        <a href="/Admin/Bookings" class="admin-stat ast-amber">
+            <div class="stat-icon-wrap"><i class="ti ti-calendar-check"></i></div>
+            <div class="stat-val">@ViewBag.TotalBookings</div>
+            <div class="stat-lbl">Total Bookings</div>
+        </a>
+        <a href="/Admin/Analytics" class="admin-stat ast-purple">
+            <div class="stat-icon-wrap"><i class="ti ti-chart-line"></i></div>
+            <div class="stat-val">Analytics</div>
+            <div class="stat-lbl">View detailed insights</div>
+        </a>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="grid-2">
+        <!-- Recent Bookings -->
+        <div class="sec-card">
+            <div class="sec-card-head">
+                <div class="sec-card-title"><i class="ti ti-clock"></i> Recent Activity (24h)</div>
+                <a href="/Admin/Bookings" class="sec-view-all">View All</a>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (ViewBag.RecentBookings != null)
+                        {
+                            var recentBookings = (IEnumerable<Local_Market_Service.Models.Booking>)ViewBag.RecentBookings;
+                            foreach (var b in recentBookings)
+                            {
+                                string stClass = "sb-pending";
+                                if (b.Status?.ToLower() == "completed") stClass = "sb-completed";
+                                else if (b.Status?.ToLower() == "rejected" || b.Status?.ToLower() == "cancelled") stClass = "sb-cancelled";
+
+                                <tr>
+                                    <td style="font-weight:600;">@(b.Customer?.ApplicationUser?.FullName ?? "Unknown")</td>
+                                    <td>@(b.Service?.Name ?? "—")</td>
+                                    <td style="color:var(--text-muted); font-size:13px;">@b.BookingDate.ToString("MMM dd, HH:mm")</td>
+                                    <td style="font-weight:700; color:var(--green-txt);">₹@(b.Amount?.ToString("0.00") ?? "0.00")</td>
+                                    <td><span class="s-badge @stClass">@(b.Status ?? "Pending")</span></td>
+                                </tr>
+                            }
+                            if (!recentBookings.Any())
+                            {
+                                <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">No recent bookings found.</td></tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Verification Queue -->
+        <div class="sec-card">
+            <div class="sec-card-head">
+                <div class="sec-card-title"><i class="ti ti-shield-check"></i> Pending Providers</div>
+                <a href="/Admin/Providers" class="sec-view-all">Manage</a>
+            </div>
+            <div class="item-list">
+                @if (ViewBag.ProvList != null)
+                {
+                    var provList = (IEnumerable<Local_Market_Service.Models.Provider>)ViewBag.ProvList;
+                    foreach (var p in provList)
+                    {
+                        <a href="/Admin/ViewProvider/@p.Id" class="list-item">
+                            <div class="item-avatar">@(p.ApplicationUser?.FullName != null && p.ApplicationUser.FullName.Length > 0 ? p.ApplicationUser.FullName.Substring(0, 1).ToUpper() : "U")</div>
+                            <div class="item-info">
+                                <div class="item-title">@(p.ApplicationUser?.FullName ?? "Unknown")</div>
+                                <div class="item-sub">@(p.BusinessName ?? "Independent")</div>
+                            </div>
+                            <div class="item-action"><i class="ti ti-chevron-right"></i></div>
+                        </a>
+                    }
+                    if (!provList.Any())
+                    {
+                        <div style="padding:40px 24px; text-align:center; color:var(--text-muted);">
+                            <i class="ti ti-circle-check" style="font-size:32px; color:var(--green); margin-bottom:12px; display:block;"></i>
+                            All caught up! No pending providers.
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="grid-half">
+        <!-- Categories Overview -->
+        <div class="sec-card">
+            <div class="sec-card-head">
+                <div class="sec-card-title"><i class="ti ti-category"></i> Top Categories</div>
+                <a href="/Admin/Categories" class="sec-view-all">View All</a>
+            </div>
+            <div style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
+                @if(ViewBag.CatCounts != null) {
+                    var cats = (IEnumerable<dynamic>)ViewBag.CatCounts;
+                    var colors = new[] { "var(--accent)", "var(--amber)", "var(--blue)", "var(--purple)", "var(--red)", "var(--green)" };
+                    int i = 0;
+                    int maxCount = cats.Any() ? Enumerable.Max(cats.Select(c => (int)c.Count)) : 1;
+                    maxCount = maxCount == 0 ? 1 : maxCount; 
+
+                    foreach(var c in cats.Take(5)) {
+                        int pct = (int)((double)c.Count / maxCount * 100);
+                        string color = colors[i % colors.Length];
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px; font-weight:600;">
+                                <span>@c.Name</span>
+                                <span style="color:var(--text-muted);">@c.Count bookings</span>
+                            </div>
+                            <div class="pb-wrap">
+                                <div class="pb-fill" style="width: @pct%; background: @color;"></div>
+                            </div>
+                        </div>
+                        i++;
+                    }
+                    if(!cats.Any()) {
+                        <div style="text-align:center; color:var(--text-muted); padding:20px;">No categories found.</div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Payments Overview -->
+        <div class="sec-card">
+            <div class="sec-card-head">
+                <div class="sec-card-title"><i class="ti ti-wallet"></i> Payment Methods</div>
+                <a href="/Admin/Payments" class="sec-view-all">Transactions</a>
+            </div>
+            <div style="padding: 24px; display:flex; flex-direction:column; gap:20px;">
+                @if(ViewBag.PayMethods != null) {
+                    var payMethods = (IEnumerable<dynamic>)ViewBag.PayMethods;
+                    var colors = new[] { "var(--green)", "var(--blue)", "var(--amber)", "var(--purple)" };
+                    int i = 0;
+                    double maxAmt = payMethods.Any() ? Enumerable.Max(payMethods.Select(p => (double)p.Amount)) : 1;
+                    maxAmt = maxAmt == 0 ? 1 : maxAmt;
+
+                    foreach(var pm in payMethods.Take(4)) {
+                        int pct = (int)((double)pm.Amount / maxAmt * 100);
+                        string color = colors[i % colors.Length];
+                        <div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px; font-weight:600;">
+                                <span>@(pm.Method ?? "Unknown")</span>
+                                <span style="color:var(--text-muted);">₹@(((double)pm.Amount).ToString("0.00")) <span style="font-size:11px;font-weight:500;">(@pm.Count)</span></span>
+                            </div>
+                            <div class="pb-wrap">
+                                <div class="pb-fill" style="width: @pct%; background: @color;"></div>
+                            </div>
+                        </div>
+                        i++;
+                    }
+                    if(!payMethods.Any()) {
+                        <div style="text-align:center; color:var(--text-muted); padding:20px;">No payment records found.</div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Dashboard";
+        document.getElementById("page-crumb").innerText = "Dashboard";
+    });
+</script>

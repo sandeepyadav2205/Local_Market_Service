@@ -1,0 +1,633 @@
+@model Local_Market_Service.Models.Customer
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "_CustomerLayout";
+    string dp = string.IsNullOrEmpty(Model?.ApplicationUser?.profileImage) ? "default.jpg" : Model.ApplicationUser.profileImage;
+    string memberSince = Model?.CreatedAt.ToString("MMMM yyyy") ?? "";
+    string fullName = Model?.ApplicationUser?.FullName ?? "Customer";
+    string initials = fullName.Length >= 2
+        ? $"{fullName[0]}{fullName.Split(' ').Last()[0]}".ToUpper()
+        : fullName.Substring(0, 1).ToUpper();
+}
+
+<style>
+    /* ── Page Wrapper ─────────────────────────────────────── */
+    .prof-page {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 24px;
+        align-items: start;
+        animation: fadeInUp .45s ease both;
+    }
+
+    /* ── Left Sidebar ─────────────────────────────────────── */
+    .prof-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: sticky;
+        top: 24px;
+    }
+
+    /* ── Profile Card (Sidebar) ───────────────────────────── */
+    .prof-id-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .prof-id-banner {
+        background: linear-gradient(135deg, #0d6e31 0%, #1ecc60 100%);
+        height: 80px;
+        position: relative;
+    }
+    .prof-id-banner::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Ccircle cx='20' cy='20' r='10'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .prof-avatar-wrap {
+        position: relative;
+        width: 90px;
+        height: 90px;
+        margin: -45px auto 0;
+        z-index: 2;
+    }
+    .prof-avatar-img {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--surface);
+        box-shadow: 0 4px 20px rgba(0,0,0,.15);
+        display: block;
+    }
+    .prof-avatar-cam {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 28px;
+        height: 28px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 50%;
+        border: 2.5px solid var(--surface);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: transform .2s, background .2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .prof-avatar-cam:hover { transform: scale(1.15); background: #0f7a38; }
+    .prof-id-body {
+        padding: 16px 20px 20px;
+        text-align: center;
+    }
+    .prof-id-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+    .prof-id-email {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+        word-break: break-all;
+    }
+    .prof-id-chips {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        text-align: left;
+    }
+    .prof-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 13px;
+        color: var(--text-sec);
+        font-weight: 500;
+    }
+    .prof-chip i {
+        font-size: 16px;
+        color: var(--accent);
+        flex-shrink: 0;
+        width: 18px;
+    }
+    .prof-chip span { word-break: break-all; }
+
+    /* ── Quick Nav (Sidebar) ──────────────────────────────── */
+    .prof-quick-nav {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: var(--shadow);
+    }
+    .pqn-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        padding: 4px 8px 8px;
+    }
+    .pqn-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        color: var(--text-sec);
+        text-decoration: none;
+        font-size: 13.5px;
+        font-weight: 500;
+        transition: background .15s, color .15s;
+        cursor: pointer;
+    }
+    .pqn-item i { font-size: 17px; color: var(--text-muted); transition: color .15s; }
+    .pqn-item:hover, .pqn-item.active {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+    }
+    .pqn-item:hover i, .pqn-item.active i { color: var(--accent); }
+
+    /* ── Right Form Area ──────────────────────────────────── */
+    .prof-form-area {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* ── Section Card ─────────────────────────────────────── */
+    .sec-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: box-shadow .2s;
+    }
+    .sec-card:hover { box-shadow: var(--shadow-lg); }
+
+    .sec-card-head {
+        padding: 20px 28px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .sec-head-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .shi-green { background: var(--accent-bg); color: var(--accent-txt); }
+    .shi-blue  { background: #dbeafe; color: #1d4ed8; }
+    .shi-purple { background: var(--purple-bg); color: var(--purple-txt); }
+
+    .sec-head-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 2px;
+    }
+    .sec-head-sub { font-size: 12px; color: var(--text-muted); }
+
+    .sec-card-body { padding: 28px; }
+
+    /* ── Form Grid ────────────────────────────────────────── */
+    .fg-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .fg-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+    .fg-full { grid-column: 1 / -1; }
+
+    /* ── Form Field ───────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field-label {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--text-sec);
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .field-label i { font-size: 13px; color: var(--accent); }
+    .field-input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1.5px solid var(--border);
+        border-radius: 11px;
+        font-size: 14.5px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: inherit;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    .field-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(30,204,96,.13);
+        background: var(--surface);
+    }
+    .field-input[readonly] {
+        background: var(--surface-2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+        border-style: dashed;
+    }
+    .field-input::placeholder { color: var(--text-muted); }
+    .field-hint {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* ── Photo Upload ─────────────────────────────────────── */
+    .photo-upload-area {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 18px;
+        border: 2px dashed var(--border);
+        border-radius: 14px;
+        cursor: pointer;
+        transition: border-color .2s, background .2s;
+        background: var(--bg);
+    }
+    .photo-upload-area:hover {
+        border-color: var(--accent);
+        background: var(--accent-bg);
+    }
+    .photo-current {
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
+        object-fit: cover;
+        border: 2.5px solid var(--border);
+        flex-shrink: 0;
+        transition: border-color .2s;
+    }
+    .photo-upload-area:hover .photo-current { border-color: var(--accent); }
+    .photo-upload-info { flex: 1; }
+    .photo-upload-info strong {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 3px;
+    }
+    .photo-upload-info span { font-size: 12px; color: var(--text-muted); }
+    .photo-upload-btn {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border: 1px solid rgba(30,204,96,.3);
+        border-radius: 10px;
+        padding: 9px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-shrink: 0;
+        pointer-events: none;
+    }
+
+    /* ── Success Alert ────────────────────────────────────── */
+    .success-toast {
+        background: linear-gradient(90deg, #d1fae5, #f0fdf4);
+        border: 1.5px solid rgba(30,204,96,.4);
+        color: #065f46;
+        padding: 14px 20px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        animation: fadeInDown .4s ease both;
+        box-shadow: 0 4px 14px rgba(30,204,96,.12);
+    }
+    .success-toast i { font-size: 22px; color: #16a34a; }
+
+    /* ── Save Bar ─────────────────────────────────────────── */
+    .save-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        box-shadow: var(--shadow);
+        flex-wrap: wrap;
+    }
+    .save-bar-info {
+        font-size: 13px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .save-bar-info i { color: var(--accent); font-size: 16px; }
+    .save-bar-actions { display: flex; gap: 10px; }
+    .btn-reset-sm {
+        background: var(--bg);
+        color: var(--text-sec);
+        border: 1.5px solid var(--border);
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transition: all .2s;
+    }
+    .btn-reset-sm:hover { background: var(--surface-2); color: var(--text); }
+    .btn-save-main {
+        background: linear-gradient(135deg, #0f7a38, #1ecc60);
+        color: #fff;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform .2s, box-shadow .2s;
+        box-shadow: 0 5px 18px rgba(30,204,96,.28);
+        font-family: inherit;
+    }
+    .btn-save-main:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,204,96,.38); }
+    .btn-save-main:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @@media (max-width: 900px) {
+        .prof-page { grid-template-columns: 1fr; }
+        .prof-sidebar { position: static; }
+        .fg-2 { grid-template-columns: 1fr; }
+        .fg-3 { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 580px) {
+        .fg-3 { grid-template-columns: 1fr; }
+        .save-bar { flex-direction: column; align-items: stretch; }
+        .save-bar-actions { flex-direction: column; }
+        .btn-save-main, .btn-reset-sm { justify-content: center; }
+    }
+</style>
+
+<div class="prof-page">
+
+    <!-- ══════════════ LEFT SIDEBAR ══════════════ -->
+    <aside class="prof-sidebar">
+
+        <!-- Profile Identity Card -->
+        <div class="prof-id-card">
+            <div class="prof-id-banner"></div>
+
+            <div class="prof-avatar-wrap">
+                <img src="/Images/@dp" id="avatarPreview" class="prof-avatar-img"
+                     onerror="this.src='/Images/default.jpg';" alt="Profile" />
+                <label for="ImageFileHidden" class="prof-avatar-cam" title="Change photo">
+                    <i class="ti ti-camera"></i>
+                </label>
+            </div>
+
+            <div class="prof-id-body">
+                <div class="prof-id-name">@fullName</div>
+                <div class="prof-id-email">@Model?.ApplicationUser?.Email</div>
+
+                <div class="prof-id-chips">
+                    @if (!string.IsNullOrEmpty(Model?.ApplicationUser?.PhoneNumber))
+                    {
+                        <div class="prof-chip">
+                            <i class="ti ti-phone"></i>
+                            <span>@Model.ApplicationUser.PhoneNumber</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model?.City) || !string.IsNullOrEmpty(Model?.State))
+                    {
+                        <div class="prof-chip">
+                            <i class="ti ti-map-pin"></i>
+                            <span>@(string.Join(", ", new[] { Model?.City, Model?.State }.Where(s => !string.IsNullOrEmpty(s))))</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model?.Pincode))
+                    {
+                        <div class="prof-chip">
+                            <i class="ti ti-hash"></i>
+                            <span>Pincode: @Model.Pincode</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(memberSince))
+                    {
+                        <div class="prof-chip">
+                            <i class="ti ti-calendar-stats"></i>
+                            <span>Member since @memberSince</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Nav -->
+        <div class="prof-quick-nav">
+            <div class="pqn-label">Quick Links</div>
+            <a asp-action="Index" asp-controller="Customer" class="pqn-item">
+                <i class="ti ti-layout-dashboard"></i> Dashboard
+            </a>
+            <a asp-action="Bookings" asp-controller="Customer" class="pqn-item">
+                <i class="ti ti-calendar-check"></i> My Bookings
+            </a>
+            <a asp-action="Cart" asp-controller="Customer" class="pqn-item">
+                <i class="ti ti-shopping-cart"></i> My Cart
+            </a>
+            <a asp-action="Explore" asp-controller="Customer" class="pqn-item">
+                <i class="ti ti-search"></i> Explore Services
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- ══════════════ RIGHT FORM AREA ══════════════ -->
+    <div class="prof-form-area">
+
+        <!-- Success Toast -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="success-toast">
+                <i class="ti ti-circle-check"></i>
+                <span>@TempData["Success"]</span>
+            </div>
+        }
+
+        <form asp-action="Profile" method="post" enctype="multipart/form-data" id="profileForm">
+            <input type="file" id="ImageFileHidden" name="ImageFile"
+                   style="display:none;" accept="image/*" onchange="handleImagePick(event)" />
+
+            <!-- Section 1: Personal Info -->
+            <div class="sec-card" style="margin-bottom: 20px;">
+                <div class="sec-card-head">
+                    <div class="sec-head-icon shi-green"><i class="ti ti-user-circle"></i></div>
+                    <div>
+                        <div class="sec-head-title">Personal Information</div>
+                        <div class="sec-head-sub">Update your name, phone number and profile photo</div>
+                    </div>
+                </div>
+                <div class="sec-card-body">
+
+                    <!-- Photo Upload Row -->
+                    <div class="field" style="margin-bottom: 22px;">
+                        <label class="field-label"><i class="ti ti-photo"></i> Profile Photo</label>
+                        <label for="ImageFileHidden" class="photo-upload-area" id="photoUploadArea">
+                            <img src="/Images/@dp" id="photoCurrentPreview" class="photo-current"
+                                 onerror="this.src='/Images/default.jpg';" alt="Current" />
+                            <div class="photo-upload-info">
+                                <strong id="photoLabel">Click to change photo</strong>
+                                <span>Supports JPG, PNG, WEBP — Max 5 MB</span>
+                            </div>
+                            <div class="photo-upload-btn">
+                                <i class="ti ti-upload"></i> Upload
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="fg-2">
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-user"></i> Full Name</label>
+                            <input type="text" name="ApplicationUser.FullName"
+                                   class="field-input" value="@Model?.ApplicationUser?.FullName"
+                                   placeholder="Your full name" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-phone"></i> Phone Number</label>
+                            <input type="tel" name="ApplicationUser.PhoneNumber"
+                                   class="field-input" value="@Model?.ApplicationUser?.PhoneNumber"
+                                   placeholder="10-digit mobile number" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-mail"></i> Email Address</label>
+                            <input type="email" class="field-input"
+                                   value="@Model?.ApplicationUser?.Email" readonly />
+                            <div class="field-hint"><i class="ti ti-info-circle"></i> Email cannot be changed</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Section 2: Address Details -->
+            <div class="sec-card" style="margin-bottom: 20px;">
+                <div class="sec-card-head">
+                    <div class="sec-head-icon shi-blue"><i class="ti ti-map-pin"></i></div>
+                    <div>
+                        <div class="sec-head-title">Address Details</div>
+                        <div class="sec-head-sub">Your service delivery location for bookings</div>
+                    </div>
+                </div>
+                <div class="sec-card-body">
+                    <div class="fg-2">
+                        <div class="field fg-full">
+                            <label class="field-label"><i class="ti ti-home"></i> Street Address</label>
+                            <input type="text" name="Address" class="field-input"
+                                   value="@Model?.Address"
+                                   placeholder="House no., Street name, Area" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-building-community"></i> City</label>
+                            <input type="text" name="City" class="field-input"
+                                   value="@Model?.City" placeholder="e.g. Mumbai" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-map-2"></i> State</label>
+                            <input type="text" name="State" class="field-input"
+                                   value="@Model?.State" placeholder="e.g. Maharashtra" required />
+                        </div>
+                        <div class="field">
+                            <label class="field-label"><i class="ti ti-hash"></i> Pincode</label>
+                            <input type="text" name="Pincode" class="field-input"
+                                   value="@Model?.Pincode"
+                                   placeholder="6-digit pincode" maxlength="6"
+                                   pattern="[0-9]{6}" required />
+                            <div class="field-hint"><i class="ti ti-info-circle"></i> Used to find nearby providers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Bar -->
+            <div class="save-bar">
+                <div class="save-bar-info">
+                    <i class="ti ti-shield-check"></i>
+                    Your information is saved securely.
+                </div>
+                <div class="save-bar-actions">
+                    <button type="reset" class="btn-reset-sm">
+                        <i class="ti ti-rotate"></i> Reset
+                    </button>
+                    <button type="submit" class="btn-save-main" id="saveBtn">
+                        <i class="ti ti-device-floppy"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "My Profile";
+        document.getElementById("page-crumb").innerText = "Profile";
+
+        // Submit loading state
+        document.getElementById("profileForm").addEventListener("submit", function () {
+            const btn = document.getElementById("saveBtn");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite;display:inline-block;"></i> Saving...';
+        });
+    });
+
+    function handleImagePick(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            // Update main avatar preview (sidebar)
+            document.getElementById("avatarPreview").src = e.target.result;
+            // Update photo upload area preview
+            document.getElementById("photoCurrentPreview").src = e.target.result;
+            // Update label text
+            document.getElementById("photoLabel").textContent = file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+</script>

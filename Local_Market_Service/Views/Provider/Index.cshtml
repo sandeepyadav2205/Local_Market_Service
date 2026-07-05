@@ -1,0 +1,332 @@
+@model Provider
+@using Local_Market_Service.Models
+@{
+    ViewData["Title"] = "Provider Dashboard";
+    Layout = "_ProviderLayout";
+    int totalBookings = ViewBag.TotalBookings ?? 0;
+    int completedBookings = ViewBag.CompletedBookings ?? 0;
+    decimal totalEarnings = (decimal)(ViewBag.TotalEarnings ?? 0m);
+    int activeServices = ViewBag.ActiveServices ?? 0;
+    var recentBookings = (IEnumerable<Booking>)(ViewBag.RecentBookings ?? new List<Booking>());
+}
+<style>
+    .dash-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    /* ── Welcome Banner ──────────────────────────────────── */
+    .welcome-banner {
+        background: linear-gradient(135deg, #0d6e31 0%, #1ecc60 60%, #3de07f 100%);
+        border-radius: 20px;
+        padding: 28px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(30,204,96,.25);
+    }
+    .welcome-banner::before {
+        content: '';
+        position: absolute;
+        top: -50px; right: -50px;
+        width: 200px; height: 200px;
+        background: rgba(255,255,255,.08);
+        border-radius: 50%;
+    }
+    .welcome-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -30px; left: 30%;
+        width: 140px; height: 140px;
+        background: rgba(255,255,255,.05);
+        border-radius: 50%;
+    }
+    .wb-text { position: relative; z-index: 2; }
+    .wb-greeting {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+    .wb-sub { font-size: 14px; color: rgba(255,255,255,.8); }
+    .wb-badge {
+        background: rgba(255,255,255,.18);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,.3);
+        color: #fff;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative; z-index: 2;
+    }
+    .wb-badge i { font-size: 16px; }
+
+    /* ── Pending Verification Banner ─────────────────────── */
+    .verify-warn {
+        background: linear-gradient(90deg, #fef3c7, #fffbeb);
+        border: 1.5px solid #f59e0b;
+        color: #92400e;
+        padding: 16px 22px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-weight: 500;
+        font-size: 14px;
+        box-shadow: 0 4px 14px rgba(245,158,11,.12);
+    }
+    .verify-warn i { font-size: 24px; color: #d97706; flex-shrink: 0; }
+
+    /* ── Stats Grid ──────────────────────────────────────── */
+    .prov-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .prov-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px 20px;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .prov-stat:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .prov-stat::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 18px 18px 0 0;
+    }
+    .pst-purple::after { background: var(--purple); }
+    .pst-green::after { background: var(--green); }
+    .pst-amber::after { background: var(--amber); }
+    .pst-accent::after { background: var(--accent); }
+
+    .stat-icon-wrap {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px;
+        margin-bottom: 14px;
+    }
+    .pst-purple .stat-icon-wrap { background: var(--purple-bg); color: var(--purple-txt); }
+    .pst-green .stat-icon-wrap { background: var(--green-bg); color: var(--green-txt); }
+    .pst-amber .stat-icon-wrap { background: var(--amber-bg); color: var(--amber-txt); }
+    .pst-accent .stat-icon-wrap { background: var(--accent-bg); color: var(--accent-txt); }
+
+    .stat-val {
+        font-family: 'Outfit', sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+    .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+    /* ── Section Card ────────────────────────────────────── */
+    .sec-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .sec-card-head {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .sec-card-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .sec-card-title i { color: var(--accent); }
+    .sec-view-all {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent-txt);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        background: var(--accent-bg);
+        border: 1px solid rgba(30,204,96,.2);
+        transition: all .2s;
+    }
+    .sec-view-all:hover { background: var(--accent); color: #fff; }
+
+    /* ── Table ───────────────────────────────────────────── */
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th {
+        padding: 12px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--text-muted);
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+    .dash-table td {
+        padding: 14px 16px;
+        font-size: 14px;
+        color: var(--text);
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr { transition: background .15s; }
+    .dash-table tbody tr:hover { background: var(--bg); }
+
+    .cust-cell { display: flex; align-items: center; gap: 10px; }
+    .cust-av {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .cust-name { font-weight: 600; font-size: 14px; color: var(--text); }
+
+    .s-badge {
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: inline-block;
+    }
+    .sb-pending { background: #fef3c7; color: #92400e; }
+    .sb-accepted { background: #dbeafe; color: #1e40af; }
+    .sb-completed { background: #d1fae5; color: #065f46; }
+    .sb-rejected { background: #fee2e2; color: #991b1b; }
+
+    @@media (max-width: 900px) { .prov-stats { grid-template-columns: 1fr 1fr; } }
+    @@media (max-width: 580px) { .prov-stats { grid-template-columns: 1fr; } .welcome-banner { flex-direction: column; align-items: flex-start; } }
+</style>
+
+<div class="dash-wrap">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <div class="wb-text">
+            <div class="wb-greeting">Welcome back, @(Model.ApplicationUser?.FullName?.Split(' ')[0] ?? "Provider")! 👋</div>
+            <div class="wb-sub">@(Model.BusinessName ?? "Your Business") — here's what's happening today.</div>
+        </div>
+        @if (Model.IsVerified == true)
+        {
+            <div class="wb-badge"><i class="ti ti-shield-check"></i> Verified Provider</div>
+        }
+        else
+        {
+            <div class="wb-badge" style="background:rgba(245,158,11,.3); border-color:rgba(245,158,11,.5);">
+                <i class="ti ti-clock"></i> Pending Verification
+            </div>
+        }
+    </div>
+
+    <!-- Verification Warning -->
+    @if (Model.IsVerified != true)
+    {
+        <div class="verify-warn">
+            <i class="ti ti-alert-triangle"></i>
+            <div>Your account is pending admin verification. Some features may be limited until approved.</div>
+        </div>
+    }
+
+    <!-- Stats -->
+    <div class="prov-stats">
+        <div class="prov-stat pst-purple">
+            <div class="stat-icon-wrap"><i class="ti ti-calendar-check"></i></div>
+            <div class="stat-val">@totalBookings</div>
+            <div class="stat-lbl">Total Bookings</div>
+        </div>
+        <div class="prov-stat pst-green">
+            <div class="stat-icon-wrap"><i class="ti ti-circle-check"></i></div>
+            <div class="stat-val">@completedBookings</div>
+            <div class="stat-lbl">Completed</div>
+        </div>
+        <div class="prov-stat pst-amber">
+            <div class="stat-icon-wrap"><i class="ti ti-cash"></i></div>
+            <div class="stat-val">₹@totalEarnings.ToString("0")</div>
+            <div class="stat-lbl">Total Earnings</div>
+        </div>
+        <div class="prov-stat pst-accent">
+            <div class="stat-icon-wrap"><i class="ti ti-tools"></i></div>
+            <div class="stat-val">@activeServices</div>
+            <div class="stat-lbl">Active Services</div>
+        </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="sec-card">
+        <div class="sec-card-head">
+            <div class="sec-card-title"><i class="ti ti-clock"></i> Recent Bookings</div>
+            <a asp-action="Bookings" class="sec-view-all"><i class="ti ti-external-link"></i> View All</a>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Service</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in recentBookings)
+                    {
+                        string st = b.Status?.ToLower() ?? "pending";
+                        string sc = st switch { "completed" => "sb-completed", "accepted" => "sb-accepted", "rejected" => "sb-rejected", _ => "sb-pending" };
+                        <tr>
+                            <td style="font-family:monospace; font-weight:700; color:var(--text-muted);">#@b.Id</td>
+                            <td>
+                                <div class="cust-cell">
+                                    <div class="cust-av">@(b.Customer?.ApplicationUser?.FullName?.Substring(0,1) ?? "U")</div>
+                                    <div class="cust-name">@(b.Customer?.ApplicationUser?.FullName ?? "Unknown")</div>
+                                </div>
+                            </td>
+                            <td style="font-weight:500;">@(b.Service?.Name ?? "—")</td>
+                            <td style="font-weight:700; color:var(--green-txt);">₹@(b.Amount?.ToString("0.00") ?? "0.00")</td>
+                            <td style="color:var(--text-muted);">@b.ServiceDate.ToString("MMM dd, yyyy")</td>
+                            <td><span class="s-badge @sc" style="text-transform:capitalize;">@(b.Status ?? "Pending")</span></td>
+                        </tr>
+                    }
+                    @if (!recentBookings.Any())
+                    {
+                        <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:40px;">No recent bookings found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Dashboard";
+        document.getElementById("page-crumb").innerText = "Dashboard";
+    });
+</script>

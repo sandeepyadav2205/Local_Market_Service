@@ -1,0 +1,679 @@
+﻿@model Local_Market_Service.Models.Customer
+@{
+    ViewData["Title"] = "Customer Dashboard";
+    Layout = "_CustomerLayout";
+    var recentBookings = ViewBag.RecentBookings as IEnumerable<Local_Market_Service.Models.Booking> ?? new List<Local_Market_Service.Models.Booking>();
+    var categories = ViewBag.Categories as IEnumerable<Local_Market_Service.Models.Category> ?? new List<Local_Market_Service.Models.Category>();
+    var popularServices = ViewBag.PopularServices as IEnumerable<Local_Market_Service.Models.Service> ?? new List<Local_Market_Service.Models.Service>();
+    int cartCount = ViewBag.CartCount ?? 0;
+}
+<style>
+    /* ── Dashboard Layout ─────────────────────────────────── */
+    .dash-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+        animation: fadeInUp .5s ease both;
+    }
+
+    /* ── Hero Banner ──────────────────────────────────────── */
+    .hero {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0f7a38 0%, #1ecc60 55%, #3de07f 100%);
+        padding: 52px 52px 52px 52px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 16px 48px rgba(30,204,96,.30);
+        min-height: 220px;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-orb {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,.08);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    .hero-orb-1 { width: 300px; height: 300px; top: -80px; right: -60px; }
+    .hero-orb-2 { width: 180px; height: 180px; bottom: -60px; right: 180px; animation-delay: 1.5s; }
+    .hero-content { position: relative; z-index: 2; }
+    .hero-greeting {
+        font-size: 14px;
+        color: rgba(255,255,255,.75);
+        font-weight: 500;
+        letter-spacing: .03em;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .hero-greeting .wave { animation: wave 2.5s ease-in-out infinite; display: inline-block; transform-origin: 70% 70%; }
+    @@keyframes wave {
+        0%,60%,100% { transform: rotate(0deg); }
+        10%,30% { transform: rotate(14deg); }
+        20% { transform: rotate(-8deg); }
+        40% { transform: rotate(-4deg); }
+        50% { transform: rotate(10deg); }
+    }
+    .hero-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 38px;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.1;
+        margin-bottom: 12px;
+    }
+    .hero-sub {
+        font-size: 15px;
+        color: rgba(255,255,255,.8);
+        margin-bottom: 32px;
+        max-width: 440px;
+        line-height: 1.6;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-hero-primary {
+        background: #fff;
+        color: #0f7a38;
+        border: none;
+        padding: 13px 28px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform .2s, box-shadow .2s;
+        box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2); }
+    .btn-hero-secondary {
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        border: 1.5px solid rgba(255,255,255,.35);
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .2s, border-color .2s;
+        backdrop-filter: blur(8px);
+    }
+    .btn-hero-secondary:hover { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.5); }
+
+    .hero-visual {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+    .hero-stat-pill {
+        background: rgba(255,255,255,.15);
+        backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(255,255,255,.25);
+        border-radius: 20px;
+        padding: 20px 24px;
+        text-align: center;
+        min-width: 110px;
+        transition: transform .2s;
+    }
+    .hero-stat-pill:hover { transform: translateY(-3px); }
+    .hero-stat-num {
+        font-family: 'Outfit', sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .hero-stat-lbl {
+        font-size: 12px;
+        color: rgba(255,255,255,.75);
+        font-weight: 500;
+    }
+
+    /* ── Section Head ─────────────────────────────────────── */
+    .sec-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .sec-head-left { display: flex; align-items: center; gap: 12px; }
+    .sec-icon {
+        width: 40px; height: 40px;
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .sec-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .sec-sub {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    .view-all-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent-txt);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        background: var(--accent-bg);
+        transition: background .2s;
+    }
+    .view-all-link:hover { background: var(--accent); color: #fff; }
+
+    /* ── Quick Stats ──────────────────────────────────────── */
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+    .qs-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .qs-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity .3s;
+    }
+    .qs-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .qs-card:hover::before { opacity: 1; }
+    .qs-icon {
+        width: 52px; height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    .qs-green .qs-icon { background: #d1fae5; color: #15803d; }
+    .qs-amber .qs-icon { background: #fef3c7; color: #b45309; }
+    .qs-purple .qs-icon { background: #ede9fe; color: #6d28d9; }
+    .qs-blue .qs-icon { background: #dbeafe; color: #1d4ed8; }
+    .qs-val {
+        font-family: 'Outfit', sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .qs-label {
+        font-size: 13px;
+        color: var(--text-sec);
+        font-weight: 500;
+    }
+
+    /* ── Categories Grid ──────────────────────────────────── */
+    .cat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 16px;
+    }
+    .cat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px 16px 20px;
+        text-align: center;
+        text-decoration: none;
+        color: var(--text);
+        transition: all .25s cubic-bezier(.34,1.56,.64,1);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+    }
+    .cat-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--accent-bg), transparent);
+        opacity: 0;
+        transition: opacity .25s;
+    }
+    .cat-card:hover { border-color: var(--accent); transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 36px rgba(30,204,96,.18); }
+    .cat-card:hover::before { opacity: 1; }
+    .cat-icon-wrap {
+        position: relative;
+        z-index: 1;
+        width: 60px; height: 60px;
+        margin: 0 auto 14px;
+        background: var(--bg);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+    .cat-icon { width: 40px; height: 40px; object-fit: contain; }
+    .cat-name {
+        position: relative;
+        z-index: 1;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--text);
+    }
+
+    /* ── Services Grid ────────────────────────────────────── */
+    .svc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+        gap: 24px;
+    }
+    .svc-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        transition: transform .25s, box-shadow .25s;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    .svc-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(30,204,96,.14); border-color: rgba(30,204,96,.3); }
+    .svc-img-wrap { position: relative; overflow: hidden; }
+    .svc-img {
+        width: 100%; height: 190px;
+        object-fit: cover;
+        transition: transform .4s ease;
+    }
+    .svc-card:hover .svc-img { transform: scale(1.05); }
+    .svc-img-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,.35) 0%, transparent 60%);
+    }
+    .svc-cat-badge {
+        position: absolute;
+        top: 12px; left: 12px;
+        background: rgba(255,255,255,.92);
+        backdrop-filter: blur(8px);
+        color: #15803d;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        letter-spacing: .02em;
+    }
+    .svc-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .svc-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--text);
+        line-height: 1.3;
+    }
+    .svc-prov {
+        font-size: 13px;
+        color: var(--text-sec);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+    }
+    .svc-prov i { color: var(--accent); }
+    .svc-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+    }
+    .svc-price {
+        font-family: 'Outfit', sans-serif;
+        font-weight: 800;
+        font-size: 22px;
+        color: var(--accent-txt);
+    }
+    .svc-price span { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+    .btn-add {
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border: none;
+        padding: 9px 16px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .2s, color .2s, transform .2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+    }
+    .btn-add:hover { background: var(--accent); color: #fff; transform: scale(1.05); }
+
+    /* ── Recent Bookings ──────────────────────────────────── */
+    .recent-bookings { display: flex; flex-direction: column; gap: 12px; }
+    .rb-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px 20px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .rb-card:hover { transform: translateX(4px); box-shadow: var(--shadow-lg); }
+    .rb-img {
+        width: 60px; height: 60px;
+        object-fit: cover;
+        border-radius: 14px;
+        flex-shrink: 0;
+    }
+    .rb-info { flex: 1; }
+    .rb-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text);
+        margin-bottom: 4px;
+    }
+    .rb-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .rb-meta i { font-size: 13px; }
+    .status-badge {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+    .s-pending { background: #fef3c7; color: #b45309; }
+    .s-confirmed { background: #d1fae5; color: #065f46; }
+    .s-completed { background: #ede9fe; color: #6d28d9; }
+    .s-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-mini {
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-muted);
+        background: var(--surface);
+        border-radius: 16px;
+        border: 1.5px dashed var(--border);
+    }
+    .empty-mini i { font-size: 48px; margin-bottom: 12px; color: var(--border); }
+    .empty-mini p { font-size: 14px; margin-bottom: 16px; }
+    .btn-explore {
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 24px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .2s, transform .2s;
+    }
+    .btn-explore:hover { background: var(--green-txt); transform: translateY(-2px); }
+
+    @@media (max-width: 900px) {
+        .hero { padding: 36px 28px; }
+        .hero-visual { display: none; }
+        .hero-name { font-size: 28px; }
+        .quick-stats { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width: 600px) {
+        .hero { padding: 28px 20px; }
+        .quick-stats { grid-template-columns: 1fr; }
+        .cat-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+</style>
+
+<div class="dash-wrap">
+
+    <!-- ── Hero Banner ────────────────────────────────────── -->
+    <div class="hero">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-content">
+            <div class="hero-greeting">
+                <span class="wave">👋</span>
+                Welcome back,
+            </div>
+            <div class="hero-name">@(Model?.ApplicationUser?.FullName?.Split(' ')[0] ?? "Guest")</div>
+            <div class="hero-sub">Discover trusted local professionals. Book services in seconds and get things done right at your doorstep.</div>
+            <div class="hero-actions">
+                <a asp-action="Explore" class="btn-hero-primary">
+                    <i class="ti ti-search"></i> Explore Services
+                </a>
+                <a asp-action="Bookings" class="btn-hero-secondary">
+                    <i class="ti ti-calendar-event"></i> My Bookings
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-stat-pill">
+                <div class="hero-stat-num">@recentBookings.Count()</div>
+                <div class="hero-stat-lbl">Recent<br/>Bookings</div>
+            </div>
+            <div class="hero-stat-pill">
+                <div class="hero-stat-num">@cartCount</div>
+                <div class="hero-stat-lbl">Cart<br/>Items</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Quick Stats ────────────────────────────────────── -->
+    <div class="quick-stats">
+        <div class="qs-card qs-green">
+            <div class="qs-icon"><i class="ti ti-calendar-check"></i></div>
+            <div>
+                <div class="qs-val">@recentBookings.Count()</div>
+                <div class="qs-label">Recent Bookings</div>
+            </div>
+        </div>
+        <div class="qs-card qs-amber">
+            <div class="qs-icon"><i class="ti ti-clock-hour-4"></i></div>
+            <div>
+                <div class="qs-val">@recentBookings.Count(b => (b.Status ?? "").ToLower() == "pending")</div>
+                <div class="qs-label">Pending</div>
+            </div>
+        </div>
+        <div class="qs-card qs-purple">
+            <div class="qs-icon"><i class="ti ti-circle-check"></i></div>
+            <div>
+                <div class="qs-val">@recentBookings.Count(b => (b.Status ?? "").ToLower() == "completed")</div>
+                <div class="qs-label">Completed</div>
+            </div>
+        </div>
+        <div class="qs-card qs-blue">
+            <div class="qs-icon"><i class="ti ti-shopping-cart"></i></div>
+            <div>
+                <div class="qs-val">@cartCount</div>
+                <div class="qs-label">Cart Items</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Browse Categories ──────────────────────────────── -->
+    @if (categories.Any())
+    {
+        <div>
+            <div class="sec-head">
+                <div class="sec-head-left">
+                    <div class="sec-icon"><i class="ti ti-category-2"></i></div>
+                    <div>
+                        <div class="sec-title">Browse Categories</div>
+                        <div class="sec-sub">Choose from a wide range of services</div>
+                    </div>
+                </div>
+                <a asp-action="Explore" class="view-all-link">View All <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div class="cat-grid">
+                @foreach (var cat in categories)
+                {
+                    <a asp-action="Explore" asp-route-categoryId="@cat.Id" class="cat-card">
+                        <div class="cat-icon-wrap">
+                            <img src="/Images/@(cat.IconUrl ?? "default-cat.png")" class="cat-icon"
+                                 onerror="this.src='/Images/default-cat.png';" alt="@cat.Name" />
+                        </div>
+                        <div class="cat-name">@cat.Name</div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ── Popular Services ──────────────────────────────── -->
+    @if (popularServices.Any())
+    {
+        <div>
+            <div class="sec-head">
+                <div class="sec-head-left">
+                    <div class="sec-icon"><i class="ti ti-star"></i></div>
+                    <div>
+                        <div class="sec-title">Popular Services</div>
+                        <div class="sec-sub">Top-rated services in your area</div>
+                    </div>
+                </div>
+                <a asp-action="Explore" class="view-all-link">View All <i class="ti ti-arrow-right"></i></a>
+            </div>
+            <div class="svc-grid">
+                @foreach (var svc in popularServices)
+                {
+                    <div class="svc-card">
+                        <div class="svc-img-wrap">
+                            <img src="/Images/@(svc.ImageUrl ?? "default-svc.png")" class="svc-img"
+                                 onerror="this.src='/Images/default-svc.png';" alt="@svc.Name" />
+                            <div class="svc-img-overlay"></div>
+                            @if (svc.Category != null)
+                            {
+                                <span class="svc-cat-badge">@svc.Category.Name</span>
+                            }
+                        </div>
+                        <div class="svc-body">
+                            <div class="svc-title">@svc.Name</div>
+                            <div class="svc-prov">
+                                <i class="ti ti-building-store"></i>
+                                @(svc.Provider?.BusinessName ?? "Independent Provider")
+                            </div>
+                            <div class="svc-footer">
+                                <div class="svc-price">₹@svc.Price <span>/ visit</span></div>
+                                <form asp-action="AddToCart" method="post" style="margin:0;">
+                                    <input type="hidden" name="serviceId" value="@svc.Id" />
+                                    <button type="submit" class="btn-add">
+                                        <i class="ti ti-shopping-cart-plus"></i> Add
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- ── Recent Bookings ──────────────────────────────── -->
+    <div>
+        <div class="sec-head">
+            <div class="sec-head-left">
+                <div class="sec-icon"><i class="ti ti-receipt"></i></div>
+                <div>
+                    <div class="sec-title">Recent Bookings</div>
+                    <div class="sec-sub">Your latest service appointments</div>
+                </div>
+            </div>
+            <a asp-action="Bookings" class="view-all-link">View All <i class="ti ti-arrow-right"></i></a>
+        </div>
+        @if (recentBookings.Any())
+        {
+            <div class="recent-bookings">
+                @foreach (var b in recentBookings)
+                {
+                    var sc = (b.Status ?? "pending").ToLower() switch {
+                        "confirmed" => "s-confirmed",
+                        "completed" => "s-completed",
+                        "cancelled" => "s-cancelled",
+                        _ => "s-pending"
+                    };
+                    <div class="rb-card">
+                        <img src="/Images/@(b.Service?.ImageUrl ?? "default-svc.png")" class="rb-img"
+                             onerror="this.src='/Images/default-svc.png';" />
+                        <div class="rb-info">
+                            <div class="rb-name">@b.Service?.Name</div>
+                            <div class="rb-meta">
+                                <span><i class="ti ti-building-store"></i> @(b.Provider?.BusinessName ?? "Provider")</span>
+                                <span><i class="ti ti-calendar"></i> @b.ServiceDate.ToString("MMM dd, yyyy")</span>
+                                <span><i class="ti ti-currency-rupee"></i> ₹@b.Amount</span>
+                            </div>
+                        </div>
+                        <span class="status-badge @sc">@b.Status</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-mini">
+                <i class="ti ti-calendar-x"></i>
+                <p>You haven't made any bookings yet.</p>
+                <a asp-action="Explore" class="btn-explore"><i class="ti ti-search"></i> Browse Services</a>
+            </div>
+        }
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Dashboard";
+        document.getElementById("page-crumb").innerText = "Dashboard";
+    });
+</script>

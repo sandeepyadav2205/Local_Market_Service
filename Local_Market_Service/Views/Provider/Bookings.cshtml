@@ -1,0 +1,304 @@
+@model ICollection<Booking>
+@{
+    ViewData["Title"] = "Manage Bookings";
+    Layout = "_ProviderLayout";
+    int pending = Model?.Count(b => b.Status?.ToLower() == "pending") ?? 0;
+    int accepted = Model?.Count(b => b.Status?.ToLower() == "accepted") ?? 0;
+    int completed = Model?.Count(b => b.Status?.ToLower() == "completed") ?? 0;
+    int rejected = Model?.Count(b => b.Status?.ToLower() == "rejected") ?? 0;
+}
+<style>
+    .bk-wrap { display: flex; flex-direction: column; gap: 24px; animation: fadeInUp .45s ease both; }
+
+    .page-hdr { margin-bottom: 4px; }
+    .page-hdr h1 { font-family:'Outfit',sans-serif; font-size:26px; font-weight:800; color:var(--text); margin-bottom:4px; }
+    .page-hdr p { font-size:14px; color:var(--text-muted); }
+
+    /* ── Stats ───────────────────────────────────────────── */
+    .bk-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .bk-stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        box-shadow: var(--shadow);
+        text-align: center;
+        cursor: pointer;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .bk-stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .bk-stat-num { font-family:'Outfit',sans-serif; font-size:28px; font-weight:800; }
+    .bk-stat-lbl { font-size:12px; font-weight:600; margin-top:2px; }
+    .bks-all .bk-stat-num { color:var(--text); } .bks-all .bk-stat-lbl { color:var(--text-muted); }
+    .bks-pending .bk-stat-num { color:#92400e; } .bks-pending .bk-stat-lbl { color:#92400e; }
+    .bks-accepted .bk-stat-num { color:#1e40af; } .bks-accepted .bk-stat-lbl { color:#1e40af; }
+    .bks-completed .bk-stat-num { color:#065f46; } .bks-completed .bk-stat-lbl { color:#065f46; }
+
+    /* ── Filter Tabs ─────────────────────────────────────── */
+    .filter-tabs {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 8px; box-shadow: var(--shadow);
+    }
+    .f-tab {
+        padding: 8px 18px; border-radius: 9px; border: none;
+        background: transparent; color: var(--text-sec);
+        font-size: 13px; font-weight: 600; cursor: pointer;
+        transition: all .2s; font-family: inherit;
+        display: flex; align-items: center; gap: 7px;
+    }
+    .f-tab:hover { background: var(--bg); color: var(--text); }
+    .f-tab.active { background: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(30,204,96,.3); }
+    .f-tab-count {
+        background: rgba(255,255,255,.25); border-radius: 10px;
+        padding: 1px 7px; font-size: 11px;
+    }
+    .f-tab:not(.active) .f-tab-count { background: var(--bg); color: var(--text-muted); }
+
+    /* ── Booking Cards ───────────────────────────────────── */
+    .bk-list { display: flex; flex-direction: column; gap: 14px; }
+    .bk-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        animation: fadeInUp .35s ease both;
+    }
+    .bk-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .bk-card-top {
+        background: var(--surface-2);
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex; align-items: center;
+        justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .bk-id-block { display: flex; align-items: center; gap: 10px; }
+    .bk-id-icon {
+        width: 34px; height: 34px;
+        background: var(--accent-bg); color: var(--accent-txt);
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+    }
+    .bk-id { font-family:'Outfit',sans-serif; font-size:15px; font-weight:700; color:var(--text); }
+    .bk-date { font-size:12px; color:var(--text-muted); margin-top:1px; }
+    .bk-status-badge { font-size:12px; font-weight:700; padding:5px 14px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
+    .bs-pending { background:#fef3c7; color:#92400e; }
+    .bs-accepted { background:#dbeafe; color:#1e40af; }
+    .bs-completed { background:#d1fae5; color:#065f46; }
+    .bs-rejected { background:#fee2e2; color:#991b1b; }
+
+    .bk-card-body {
+        padding: 18px 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr auto;
+        gap: 20px;
+        align-items: center;
+    }
+    .bk-info-block .bk-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin-bottom:4px; }
+    .bk-info-block .bk-val { font-size:14px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+    .bk-info-block .bk-val i { color:var(--accent); font-size:15px; }
+    .bk-amount { font-family:'Outfit',sans-serif; font-size:22px; font-weight:800; color:var(--text); }
+    .bk-amount span { font-size:12px; font-weight:400; color:var(--text-muted); }
+    .bk-actions { display:flex; flex-direction:column; gap:6px; }
+    .bk-btn {
+        padding: 8px 14px; border-radius: 9px;
+        font-size: 12.5px; font-weight: 700;
+        text-decoration: none; border: none; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px;
+        transition: all .2s; font-family: inherit;
+        white-space: nowrap;
+    }
+    .bk-btn-accept { background: var(--accent-bg); color: var(--accent-txt); border: 1px solid rgba(30,204,96,.3); }
+    .bk-btn-accept:hover { background: var(--accent); color: #fff; }
+    .bk-btn-complete { background: #dbeafe; color: #1e40af; border: 1px solid rgba(59,130,246,.3); }
+    .bk-btn-complete:hover { background: #3b82f6; color: #fff; }
+    .bk-btn-reject { background: var(--red-bg); color: var(--red-txt); border: 1px solid rgba(220,38,38,.2); }
+    .bk-btn-reject:hover { background: var(--red); color: #fff; }
+
+    .bk-card-footer {
+        padding: 12px 20px;
+        border-top: 1px dashed var(--border);
+        font-size: 13px; color: var(--text-muted);
+        display: flex; align-items: flex-start; gap: 7px; background: var(--bg);
+    }
+    .bk-card-footer i { color:var(--text-muted); flex-shrink:0; margin-top:1px; }
+
+    .bk-empty {
+        text-align: center; padding: 80px 32px;
+        background: var(--surface); border: 2px dashed var(--border); border-radius: 20px;
+    }
+    .bk-empty-icon {
+        width: 80px; height: 80px;
+        background: var(--accent-bg); border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 20px; font-size: 40px; color: var(--accent);
+    }
+    .bk-empty h3 { font-family:'Outfit',sans-serif; font-size:22px; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .bk-empty p { color:var(--text-muted); }
+    .bk-card.hidden { display: none; }
+
+    @@media (max-width:800px) {
+        .bk-card-body { grid-template-columns: 1fr 1fr; }
+        .bk-stats { grid-template-columns: 1fr 1fr; }
+    }
+    @@media (max-width:520px) {
+        .bk-card-body { grid-template-columns: 1fr; }
+        .bk-actions { flex-direction:row; flex-wrap:wrap; }
+    }
+</style>
+
+<div class="bk-wrap">
+
+    <div class="page-hdr">
+        <h1>Manage Bookings</h1>
+        <p>Review and respond to your service requests</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="bk-stats">
+        <div class="bk-stat bks-all">
+            <div class="bk-stat-num">@(Model?.Count ?? 0)</div>
+            <div class="bk-stat-lbl">All Bookings</div>
+        </div>
+        <div class="bk-stat bks-pending">
+            <div class="bk-stat-num">@pending</div>
+            <div class="bk-stat-lbl">Pending</div>
+        </div>
+        <div class="bk-stat bks-accepted">
+            <div class="bk-stat-num">@accepted</div>
+            <div class="bk-stat-lbl">Accepted</div>
+        </div>
+        <div class="bk-stat bks-completed">
+            <div class="bk-stat-num">@completed</div>
+            <div class="bk-stat-lbl">Completed</div>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="f-tab active" onclick="filterBk('all',this)">
+                <i class="ti ti-list"></i> All <span class="f-tab-count">@(Model.Count)</span>
+            </button>
+            <button class="f-tab" onclick="filterBk('pending',this)">
+                <i class="ti ti-clock"></i> Pending <span class="f-tab-count">@pending</span>
+            </button>
+            <button class="f-tab" onclick="filterBk('accepted',this)">
+                <i class="ti ti-calendar-check"></i> Accepted <span class="f-tab-count">@accepted</span>
+            </button>
+            <button class="f-tab" onclick="filterBk('completed',this)">
+                <i class="ti ti-circle-check"></i> Completed <span class="f-tab-count">@completed</span>
+            </button>
+            <button class="f-tab" onclick="filterBk('rejected',this)">
+                <i class="ti ti-ban"></i> Rejected <span class="f-tab-count">@rejected</span>
+            </button>
+        </div>
+
+        <div class="bk-list">
+            @{ int bIdx = 0; }
+            @foreach (var b in Model)
+            {
+                bIdx++;
+                string st = b.Status?.ToLower() ?? "pending";
+                string stClass = st switch { "accepted" => "bs-accepted", "completed" => "bs-completed", "rejected" => "bs-rejected", _ => "bs-pending" };
+                string stIcon = st switch { "accepted" => "ti-calendar-check", "completed" => "ti-circle-check", "rejected" => "ti-ban", _ => "ti-clock" };
+
+                <div class="bk-card" data-status="@st" style="animation-delay:@(bIdx*0.05)s">
+                    <div class="bk-card-top">
+                        <div class="bk-id-block">
+                            <div class="bk-id-icon"><i class="ti ti-receipt"></i></div>
+                            <div>
+                                <div class="bk-id">Booking #@b.Id</div>
+                                <div class="bk-date">Placed @b.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")</div>
+                            </div>
+                        </div>
+                        <span class="bk-status-badge @stClass">
+                            <i class="ti @stIcon"></i> @(b.Status ?? "Pending")
+                        </span>
+                    </div>
+                    <div class="bk-card-body">
+                        <div class="bk-info-block">
+                            <div class="bk-lbl">Customer</div>
+                            <div class="bk-val"><i class="ti ti-user"></i> @(b.Customer?.ApplicationUser?.FullName ?? "Unknown")</div>
+                            @if (!string.IsNullOrEmpty(b.Customer?.ApplicationUser?.PhoneNumber))
+                            {
+                                <div style="font-size:12px; color:var(--text-muted); margin-top:3px;">
+                                    📱 @b.Customer.ApplicationUser.PhoneNumber
+                                </div>
+                            }
+                        </div>
+                        <div class="bk-info-block">
+                            <div class="bk-lbl">Service</div>
+                            <div class="bk-val"><i class="ti ti-tools"></i> @(b.Service?.Name ?? "—")</div>
+                            <div class="bk-lbl" style="margin-top:8px;">Service Date</div>
+                            <div class="bk-val"><i class="ti ti-calendar-event"></i> @b.ServiceDate.ToString("MMM dd, yyyy")</div>
+                        </div>
+                        <div class="bk-info-block">
+                            <div class="bk-lbl">Amount</div>
+                            <div class="bk-amount">₹@(b.Amount?.ToString("0.00") ?? "0.00") <span>/ booking</span></div>
+                        </div>
+                        <div class="bk-actions">
+                            @if (st == "pending")
+                            {
+                                <a asp-action="AcceptBooking" asp-route-id="@b.Id" class="bk-btn bk-btn-accept">
+                                    <i class="ti ti-check"></i> Accept
+                                </a>
+                                <a asp-action="RejectBooking" asp-route-id="@b.Id" class="bk-btn bk-btn-reject"
+                                   onclick="return confirm('Reject Booking #@b.Id?');">
+                                    <i class="ti ti-x"></i> Reject
+                                </a>
+                            }
+                            else if (st == "accepted")
+                            {
+                                <a asp-action="CompleteBooking" asp-route-id="@b.Id" class="bk-btn bk-btn-complete"
+                                   onclick="return confirm('Mark Booking #@b.Id as completed?');">
+                                    <i class="ti ti-circle-check"></i> Complete
+                                </a>
+                            }
+                            else
+                            {
+                                <span style="font-size:12px; color:var(--text-muted); font-weight:500; padding:8px;">
+                                    No actions
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(b.Address) || !string.IsNullOrEmpty(b.Remark))
+                    {
+                        <div class="bk-card-footer">
+                            <i class="ti ti-map-pin"></i>
+                            <span>@b.Address @(!string.IsNullOrEmpty(b.Remark) ? $" · 💬 \"{b.Remark}\"" : "")</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="bk-empty">
+            <div class="bk-empty-icon"><i class="ti ti-calendar-off"></i></div>
+            <h3>No Bookings Yet</h3>
+            <p>When customers book your services, they'll appear here.</p>
+        </div>
+    }
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "Manage Bookings";
+        document.getElementById("page-crumb").innerText = "Bookings";
+    });
+    function filterBk(status, btn) {
+        document.querySelectorAll('.f-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.bk-card').forEach(card => {
+            card.classList.toggle('hidden', status !== 'all' && card.dataset.status !== status);
+        });
+    }
+</script>

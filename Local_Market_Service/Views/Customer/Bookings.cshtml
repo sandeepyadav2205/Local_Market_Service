@@ -1,0 +1,503 @@
+﻿@model IEnumerable<Local_Market_Service.Models.Booking>
+@{
+    ViewData["Title"] = "My Bookings";
+    Layout = "_CustomerLayout";
+    int totalCount = Model?.Count() ?? 0;
+    int pendingCount = Model?.Count(b => (b.Status ?? "").ToLower() == "pending") ?? 0;
+    int confirmedCount = Model?.Count(b => (b.Status ?? "").ToLower() == "confirmed") ?? 0;
+    int completedCount = Model?.Count(b => (b.Status ?? "").ToLower() == "completed") ?? 0;
+    int cancelledCount = Model?.Count(b => (b.Status ?? "").ToLower() == "cancelled") ?? 0;
+}
+<style>
+    .bookings-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        animation: fadeInUp .45s ease both;
+    }
+
+    /* ── Stats Row ────────────────────────────────────────── */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+    }
+    .stat-pill {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px 18px;
+        text-align: center;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        cursor: pointer;
+    }
+    .stat-pill:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .stat-pill-num {
+        font-family: 'Outfit', sans-serif;
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 6px;
+    }
+    .stat-pill-lbl { font-size: 12px; font-weight: 600; }
+    .stat-all .stat-pill-num { color: var(--text); }
+    .stat-all .stat-pill-lbl { color: var(--text-muted); }
+    .stat-pending .stat-pill-num { color: #b45309; }
+    .stat-pending .stat-pill-lbl { color: #b45309; }
+    .stat-confirmed .stat-pill-num { color: #065f46; }
+    .stat-confirmed .stat-pill-lbl { color: #065f46; }
+    .stat-completed .stat-pill-num { color: #6d28d9; }
+    .stat-completed .stat-pill-lbl { color: #6d28d9; }
+    .stat-cancelled .stat-pill-num { color: #b91c1c; }
+    .stat-cancelled .stat-pill-lbl { color: #b91c1c; }
+
+    /* ── Filter Tabs ──────────────────────────────────────── */
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow: var(--shadow);
+    }
+    .tab-btn {
+        padding: 9px 18px;
+        border-radius: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-sec);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        font-family: inherit;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .tab-btn:hover { background: var(--bg); color: var(--text); }
+    .tab-btn.active { background: var(--accent); color: #fff; box-shadow: 0 3px 10px rgba(30,204,96,.3); }
+    .tab-count {
+        background: rgba(255,255,255,.25);
+        border-radius: 10px;
+        padding: 1px 7px;
+        font-size: 11px;
+    }
+    .tab-btn:not(.active) .tab-count { background: var(--bg); color: var(--text-muted); }
+
+    /* ── Success Alert ────────────────────────────────────── */
+    .success-alert {
+        background: linear-gradient(135deg, var(--green-bg), rgba(30,204,96,.05));
+        border: 1.5px solid rgba(30,204,96,.3);
+        color: var(--green-txt);
+        padding: 16px 20px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
+        animation: fadeInDown .4s ease both;
+    }
+    .success-alert i { font-size: 22px; }
+
+    /* ── Booking Cards ────────────────────────────────────── */
+    .bookings-list { display: flex; flex-direction: column; gap: 20px; }
+    .booking-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform .2s, box-shadow .2s;
+        animation: fadeInUp .4s ease both;
+    }
+    .booking-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+    .booking-card-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        background: var(--surface-2);
+    }
+    .booking-id-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .booking-id-icon {
+        width: 36px; height: 36px;
+        background: var(--accent-bg);
+        color: var(--accent-txt);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+    }
+    .booking-id-text {
+        font-family: 'Outfit', sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .booking-id-date { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .status-badge {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .s-pending { background: #fef3c7; color: #b45309; }
+    .s-confirmed { background: #d1fae5; color: #065f46; }
+    .s-completed { background: #ede9fe; color: #6d28d9; }
+    .s-cancelled { background: #fee2e2; color: #b91c1c; }
+
+    .booking-card-body {
+        padding: 24px;
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+    }
+    .booking-svc-img {
+        width: 120px; height: 120px;
+        object-fit: cover;
+        border-radius: 16px;
+        flex-shrink: 0;
+        box-shadow: var(--shadow);
+    }
+    .booking-svc-info { flex: 1; }
+    .booking-svc-name {
+        font-family: 'Outfit', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 6px;
+    }
+    .booking-provider {
+        font-size: 14px;
+        color: var(--text-sec);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+    .booking-provider i { color: var(--accent); }
+    .booking-meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .meta-chip {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        color: var(--text-sec);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 6px 12px;
+    }
+    .meta-chip i { color: var(--accent-txt); font-size: 14px; }
+    .meta-chip strong { color: var(--text); }
+
+    .booking-amount {
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .amount-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+    .amount-val {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .booking-card-footer {
+        padding: 16px 24px;
+        border-top: 1px dashed var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        background: var(--bg);
+    }
+    .address-text {
+        font-size: 13px;
+        color: var(--text-sec);
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        max-width: 500px;
+        line-height: 1.5;
+    }
+    .address-text i { color: var(--text-muted); margin-top: 2px; flex-shrink: 0; }
+    .remark-text {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-style: italic;
+    }
+    .btn-cancel {
+        background: var(--surface);
+        color: var(--red-txt);
+        border: 1.5px solid var(--red-bg);
+        padding: 9px 18px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        transition: all .2s;
+        white-space: nowrap;
+    }
+    .btn-cancel:hover { background: var(--red-bg); transform: scale(1.02); }
+
+    /* ── Empty State ──────────────────────────────────────── */
+    .empty-bookings {
+        text-align: center;
+        padding: 100px 32px;
+        background: var(--surface);
+        border-radius: 20px;
+        border: 2px dashed var(--border);
+    }
+    .empty-bookings-icon {
+        width: 100px; height: 100px;
+        background: var(--accent-bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+    .empty-bookings-icon i { font-size: 48px; color: var(--accent); }
+    .empty-bookings h2 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 10px;
+    }
+    .empty-bookings p { font-size: 15px; color: var(--text-muted); margin-bottom: 32px; }
+    .btn-explore-now {
+        background: linear-gradient(135deg, #0f7a38, #1ecc60);
+        color: #fff;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 15px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform .2s, box-shadow .2s;
+        box-shadow: 0 4px 16px rgba(30,204,96,.3);
+    }
+    .btn-explore-now:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(30,204,96,.4); }
+
+    /* ── Hidden filter class ──────────────────────────────── */
+    .booking-card.hidden { display: none; }
+
+    @@media (max-width: 700px) {
+        .booking-card-body { flex-direction: column; }
+        .booking-svc-img { width: 100%; height: 180px; }
+        .booking-amount { text-align: left; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+
+<div class="bookings-wrap">
+
+    <!-- ── Success Toast ───────────────────────────────────── -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="success-alert">
+            <i class="ti ti-circle-check"></i>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+
+    <!-- ── Stats Row ───────────────────────────────────────── -->
+    <div class="stats-row">
+        <div class="stat-pill stat-all">
+            <div class="stat-pill-num">@totalCount</div>
+            <div class="stat-pill-lbl">All Bookings</div>
+        </div>
+        <div class="stat-pill stat-pending">
+            <div class="stat-pill-num">@pendingCount</div>
+            <div class="stat-pill-lbl">Pending</div>
+        </div>
+        <div class="stat-pill stat-confirmed">
+            <div class="stat-pill-num">@confirmedCount</div>
+            <div class="stat-pill-lbl">Confirmed</div>
+        </div>
+        <div class="stat-pill stat-completed">
+            <div class="stat-pill-num">@completedCount</div>
+            <div class="stat-pill-lbl">Completed</div>
+        </div>
+        <div class="stat-pill stat-cancelled">
+            <div class="stat-pill-num">@cancelledCount</div>
+            <div class="stat-pill-lbl">Cancelled</div>
+        </div>
+    </div>
+
+    <!-- ── Filter Tabs ─────────────────────────────────────── -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="filter-tabs">
+            <button class="tab-btn active" onclick="filterBookings('all', this)">
+                <i class="ti ti-list"></i> All <span class="tab-count">@totalCount</span>
+            </button>
+            <button class="tab-btn" onclick="filterBookings('pending', this)">
+                <i class="ti ti-clock"></i> Pending <span class="tab-count">@pendingCount</span>
+            </button>
+            <button class="tab-btn" onclick="filterBookings('confirmed', this)">
+                <i class="ti ti-calendar-check"></i> Confirmed <span class="tab-count">@confirmedCount</span>
+            </button>
+            <button class="tab-btn" onclick="filterBookings('completed', this)">
+                <i class="ti ti-circle-check"></i> Completed <span class="tab-count">@completedCount</span>
+            </button>
+            <button class="tab-btn" onclick="filterBookings('cancelled', this)">
+                <i class="ti ti-ban"></i> Cancelled <span class="tab-count">@cancelledCount</span>
+            </button>
+        </div>
+
+        <div class="bookings-list">
+            @{ int bIdx = 0; }
+            @foreach (var booking in Model)
+            {
+                bIdx++;
+                var status = (booking.Status ?? "pending").ToLower();
+                var sc = status switch {
+                    "confirmed" => "s-confirmed",
+                    "completed" => "s-completed",
+                    "cancelled" => "s-cancelled",
+                    _ => "s-pending"
+                };
+                var statusIcon = status switch {
+                    "confirmed" => "ti-calendar-check",
+                    "completed" => "ti-circle-check",
+                    "cancelled" => "ti-ban",
+                    _ => "ti-clock"
+                };
+
+                <div class="booking-card" data-status="@status" style="animation-delay: @(bIdx * 0.06)s">
+                    <div class="booking-card-header">
+                        <div class="booking-id-wrap">
+                            <div class="booking-id-icon"><i class="ti ti-receipt"></i></div>
+                            <div>
+                                <div class="booking-id-text">Booking #@booking.Id</div>
+                                <div class="booking-id-date">Placed on @booking.CreatedAt.ToString("MMM dd, yyyy • hh:mm tt")</div>
+                            </div>
+                        </div>
+                        <span class="status-badge @sc">
+                            <i class="ti @statusIcon"></i>
+                            @booking.Status
+                        </span>
+                    </div>
+
+                    <div class="booking-card-body">
+                        <img src="/Images/@(booking.Service?.ImageUrl ?? "default-svc.png")" class="booking-svc-img"
+                             onerror="this.src='/Images/default-svc.png';" alt="@booking.Service?.Name" />
+                        <div class="booking-svc-info">
+                            <div class="booking-svc-name">@booking.Service?.Name</div>
+                            <div class="booking-provider">
+                                <i class="ti ti-building-store"></i>
+                                @(booking.Provider?.BusinessName ?? "Independent Provider")
+                            </div>
+                            <div class="booking-meta">
+                                <div class="meta-chip">
+                                    <i class="ti ti-calendar-event"></i>
+                                    <span><strong>@booking.ServiceDate.ToString("MMM dd, yyyy")</strong></span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(booking.Remark))
+                                {
+                                    <div class="meta-chip">
+                                        <i class="ti ti-message"></i>
+                                        <span>Has remarks</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="booking-amount">
+                            <div class="amount-lbl">Amount</div>
+                            <div class="amount-val">₹@booking.Amount</div>
+                        </div>
+                    </div>
+
+                    <div class="booking-card-footer">
+                        <div>
+                            <div class="address-text">
+                                <i class="ti ti-map-pin"></i>
+                                <span>@booking.Address</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(booking.Remark))
+                            {
+                                <div class="remark-text" style="margin-top: 6px;">
+                                    💬 "@booking.Remark"
+                                </div>
+                            }
+                        </div>
+                        @if (status == "pending")
+                        {
+                            <a asp-action="CancelBooking" asp-route-id="@booking.Id" class="btn-cancel"
+                               onclick="return confirm('Are you sure you want to cancel Booking #@booking.Id? This action cannot be undone.');">
+                                <i class="ti ti-x"></i> Cancel Booking
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-bookings">
+            <div class="empty-bookings-icon">
+                <i class="ti ti-calendar-off"></i>
+            </div>
+            <h2>No Bookings Yet</h2>
+            <p>You haven't made any service bookings. Browse our services and book your first appointment today!</p>
+            <a asp-action="Explore" class="btn-explore-now">
+                <i class="ti ti-search"></i> Explore Services
+            </a>
+        </div>
+    }
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("page-title").innerText = "My Bookings";
+        document.getElementById("page-crumb").innerText = "Bookings";
+    });
+
+    function filterBookings(status, btn) {
+        // Update active tab
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // Filter cards
+        document.querySelectorAll(".booking-card").forEach(card => {
+            if (status === "all" || card.dataset.status === status) {
+                card.classList.remove("hidden");
+            } else {
+                card.classList.add("hidden");
+            }
+        });
+    }
+</script>
