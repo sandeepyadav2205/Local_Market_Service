@@ -1083,7 +1083,10 @@
                                             <select asp-for="CategoryId" class="reg-input" id="categoryId" required
                                                 style="padding-left: 2.5rem; appearance: auto;">
                                                 <option value="" disabled selected>Select your Category</option>
-                                                
+                                    @foreach (var category in ViewBag.Categories)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
                                             </select>
                                         </div>
                                         <span asp-validation-for="CategoryId" class="reg-validation"></span>
