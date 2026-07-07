@@ -1509,7 +1509,8 @@
                     <button class="avatar-btn" onclick="toggleUserMenu(event)" id="userMenuBtn">
                         @if (!string.IsNullOrEmpty(user?.profileImage))
                         {
-                            <img src="/Images/@user.profileImage" class="avatar" style="object-fit:cover; border:2px solid var(--accent); padding:2px;" onerror="this.src='/Images/default.jpg';" alt="Profile" />
+                            <img src="/Images/@user.profileImage" class="avatar" style="object-fit:cover; border:2px solid var(--accent); padding:2px;" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Profile" />
+                            <div class="avatar" style="border:2px solid var(--accent); display:none;"><i class="ti ti-user" style="font-size: 16px;"></i></div>
                         }
                         else
                         {
@@ -1522,7 +1523,8 @@
                         <div class="user-dropdown-header">
                             @if (!string.IsNullOrEmpty(user?.profileImage))
                             {
-                                <img src="/Images/@user.profileImage" class="ud-avatar" style="object-fit:cover;" onerror="this.src='/Images/default.jpg';" alt="Profile" />
+                                <img src="/Images/@user.profileImage" class="ud-avatar" style="object-fit:cover;" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Profile" />
+                                <div class="ud-avatar" style="display:none;"><i class="ti ti-user" style="font-size: 20px;"></i></div>
                             }
                             else
                             {

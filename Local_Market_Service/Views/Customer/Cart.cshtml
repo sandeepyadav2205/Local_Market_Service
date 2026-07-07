@@ -333,7 +333,7 @@
                     decimal lineTotal = (decimal)(item.Service?.Price ?? 0) * item.Quantity;
                     <div class="cart-item">
                         <img src="/Images/@(item.Service?.ImageUrl ?? "default-svc.png")" class="item-img"
-                             onerror="this.src='/Images/default-svc.png';" alt="@item.Service?.Name" />
+                             onerror="this.onerror=null;this.src='https://placehold.co/110x110/c8f7dc/15803d?text=Service';" alt="@item.Service?.Name" />
                         <div class="item-content">
                             <div class="item-name">@item.Service?.Name</div>
                             <div class="item-prov">

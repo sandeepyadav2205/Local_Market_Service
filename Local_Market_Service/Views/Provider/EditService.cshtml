@@ -54,7 +54,7 @@
                 <input type="hidden" asp-for="ImageUrl" />
                 
                 <div style="text-align:center; margin-bottom: 24px;">
-                    <img src="/Images/@(Model.ImageUrl ?? "default-svc.png")" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border);" onerror="this.src='/Images/default-svc.png';" />
+                    <img src="/Images/@(Model.ImageUrl ?? "default-svc.png")" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border);" onerror="this.onerror=null;this.src='https://placehold.co/80x80/c8f7dc/15803d?text=Svc';" />
                 </div>
 
                 <div class="form-group">

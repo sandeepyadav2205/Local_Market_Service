@@ -412,7 +412,7 @@
 
                     <div class="booking-card-body">
                         <img src="/Images/@(booking.Service?.ImageUrl ?? "default-svc.png")" class="booking-svc-img"
-                             onerror="this.src='/Images/default-svc.png';" alt="@booking.Service?.Name" />
+                             onerror="this.onerror=null;this.src='https://placehold.co/120x120/c8f7dc/15803d?text=Service';" alt="@booking.Service?.Name" />
                         <div class="booking-svc-info">
                             <div class="booking-svc-name">@booking.Service?.Name</div>
                             <div class="booking-provider">

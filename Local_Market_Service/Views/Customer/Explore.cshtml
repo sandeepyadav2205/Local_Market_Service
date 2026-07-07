@@ -423,7 +423,7 @@
                 <div class="svc-card" style="animation-delay: @(idx * 0.05)s">
                     <div class="svc-img-wrap">
                         <img src="/Images/@(svc.ImageUrl ?? "default-svc.png")" class="svc-img"
-                             onerror="this.src='/Images/default-svc.png';" alt="@svc.Name" />
+                             onerror="this.onerror=null;this.src='https://placehold.co/290x200/c8f7dc/15803d?text=Service';" alt="@svc.Name" />
                         <div class="svc-overlay"></div>
                         <span class="svc-cat-tag">@(svc.Category?.Name ?? "General")</span>
                     </div>
