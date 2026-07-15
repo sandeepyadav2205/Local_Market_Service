@@ -1474,10 +1474,10 @@
     confirmInput.addEventListener('input', function () {
         if (this.value === '') { matchText.textContent = ''; return; }
         if (this.value === pwInput.value) {
-            matchText.textContent = '? Passwords match';
+            matchText.textContent = 'Passwords match';
             matchText.style.color = '#16a34a';
         } else {
-            matchText.textContent = '? Passwords do not match';
+            matchText.textContent = 'Passwords do not match';
             matchText.style.color = '#ef4444';
         }
     });

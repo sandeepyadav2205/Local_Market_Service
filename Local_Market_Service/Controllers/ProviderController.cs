@@ -31,7 +31,6 @@ namespace Local_Market_Service.Controllers
                 .FirstOrDefaultAsync(p => p.UserId == user.Id);
         }
 
-        // 1. Dashboard (Index)
         public async Task<IActionResult> Index()
         {
             var provider = await GetCurrentProviderAsync();
@@ -55,7 +54,6 @@ namespace Local_Market_Service.Controllers
             return View(provider);
         }
 
-        // 2. Profile
         public async Task<IActionResult> Profile()
         {
             var provider = await GetCurrentProviderAsync();
@@ -69,7 +67,6 @@ namespace Local_Market_Service.Controllers
             var provider = await GetCurrentProviderAsync();
             if (provider == null) return NotFound();
 
-            // Update user details
             if (provider.ApplicationUser != null)
             {
                 provider.ApplicationUser.FullName = model.ApplicationUser?.FullName;
@@ -214,7 +211,6 @@ namespace Local_Market_Service.Controllers
             return RedirectToAction("Services");
         }
 
-        // 4. Bookings
         public async Task<IActionResult> Bookings()
         {
             var provider = await GetCurrentProviderAsync();
@@ -267,15 +263,12 @@ namespace Local_Market_Service.Controllers
             return RedirectToAction("Bookings");
         }
 
-        // 5. Reviews
         public async Task<IActionResult> Reviews()
         {
             var provider = await GetCurrentProviderAsync();
             if (provider == null) return NotFound();
             
-            // Note: Since Review model might not exist, we use Bookings as a placeholder
-            // In a real scenario, this would query a Reviews table.
-            // For now, we will just return a view.
+            
             return View();
         }
 

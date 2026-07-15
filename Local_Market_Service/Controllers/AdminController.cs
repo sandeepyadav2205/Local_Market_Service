@@ -25,24 +25,21 @@ namespace Local_Market_Service.Controllers
         
         public IActionResult Index()
         {
-            // Basic totals
         ViewBag.TotalCustomers = context.Customers.Count();
         ViewBag.ThisMonthCustomer = context.Customers.Count(c => c.CreatedAt.Month == DateTime.Now.Month && c.CreatedAt.Year == DateTime.Now.Year);
         ViewBag.TotalVerifiedProviders = context.Providers.Count(p => p.IsVerified == true);
         ViewBag.TotalPendingProviders = context.Providers.Count(p => p.IsVerified != true); 
-
-            // Total bookings and recent bookings (last 24 hours) for table
-            ViewBag.TotalBookings = context.Booking.Count();
+        ViewBag.TotalBookings = context.Booking.Count();
             var recentBookings = context.Booking
                 .Include(b => b.Service)
                 .Include(b => b.Customer).ThenInclude(c => c.ApplicationUser)
-                .Where(b => b.BookingDate >= DateTime.Now.AddDays(-1)) // last 24 hours
+                .Where(b => b.BookingDate >= DateTime.Now.AddDays(-1))
                 .OrderByDescending(b => b.BookingDate)
                 .Take(10)
                 .ToList();
             ViewBag.RecentBookings = recentBookings;
 
-        // Weekly revenue (last 7 days) for mini chart
+       
         var today = DateTime.Today;
         var revLabels = new List<string>();
         var revValues = new List<decimal>();
@@ -52,14 +49,13 @@ namespace Local_Market_Service.Controllers
             revLabels.Add(day.ToString("MMM dd"));
             var dayTotal = context.Booking
                 .Where(b => b.BookingDate.Date == day)
-                .Sum(b => (decimal?)b.Amount) ?? 0m; // requires Booking.Amount numeric
+                .Sum(b => (decimal?)b.Amount) ?? 0m;
             revValues.Add(dayTotal);
         }
         ViewBag.RevLabelsJson = JsonSerializer.Serialize(revLabels);
         ViewBag.RevValuesJson = JsonSerializer.Serialize(revValues);
 
-        // Bookings by category (all time)
-            // Bookings by category (all time)
+        
             var catCounts = context.Category
                 .Select(cat => new {
                     Name = cat.Name,
@@ -69,9 +65,9 @@ namespace Local_Market_Service.Controllers
                 })
                 .ToList();
             ViewBag.CatListJson = JsonSerializer.Serialize(catCounts);
-            ViewBag.CatCounts = catCounts; // expose for server-side rendering
+            ViewBag.CatCounts = catCounts; 
 
-        // Provider verification queue (pending)
+        
         var provQueue = context.Providers
             .Where(p => p.IsVerified != true)
             .Include(p => p.ApplicationUser)
@@ -80,7 +76,7 @@ namespace Local_Market_Service.Controllers
             .ToList();
         ViewBag.ProvList = provQueue;
 
-        // Recent activity feed (mix recent bookings)
+        
         var activities = context.Booking
             .Include(b => b.Customer).ThenInclude(c => c.ApplicationUser)
             .Include(b => b.Service)
@@ -94,13 +90,11 @@ namespace Local_Market_Service.Controllers
             .ToList();
         ViewBag.ActivityFeedJson = JsonSerializer.Serialize(activities);
 
-        // Payment methods overview
-        // If Payments.Amount is numeric in the model/DB the following works.
-        // If Amount is stored as string, evaluate parsing on the client to avoid EF translation errors.
+       
         var payMethods = new List<object>();
         try
         {
-            // Try server-side sum assuming Amount is numeric
+          
             payMethods = context.Payments
                 .GroupBy(p => p.PaymentMethod)
                 .Select(g => new {
@@ -112,7 +106,7 @@ namespace Local_Market_Service.Controllers
         }
         catch (InvalidOperationException)
         {
-            // Fall back to client-side parsing if EF can't translate the sum (e.g. Amount is string)
+            
             payMethods = context.Payments
                 .AsEnumerable()
                 .GroupBy(p => p.PaymentMethod)
@@ -128,7 +122,6 @@ namespace Local_Market_Service.Controllers
         }
 
         ViewBag.PayMethodsJson = JsonSerializer.Serialize(payMethods);
-            // Also expose list for server-side rendering in the view
             ViewBag.PayMethods = payMethods;
 
         return View();
@@ -138,7 +131,6 @@ namespace Local_Market_Service.Controllers
         {
             var now = DateTime.Now;
             
-            // 1. Monthly Revenue for the last 6 months
             var monthlyRevLabels = new List<string>();
             var monthlyRevValues = new List<decimal>();
             for (int i = 5; i >= 0; i--)
@@ -153,7 +145,6 @@ namespace Local_Market_Service.Controllers
             ViewBag.MonthlyRevLabelsJson = JsonSerializer.Serialize(monthlyRevLabels);
             ViewBag.MonthlyRevValuesJson = JsonSerializer.Serialize(monthlyRevValues);
 
-            // 2. User Growth (Customers vs Providers over last 6 months)
             var customerGrowth = new List<int>();
             var providerGrowth = new List<int>();
             for (int i = 5; i >= 0; i--)
@@ -165,7 +156,6 @@ namespace Local_Market_Service.Controllers
             ViewBag.CustomerGrowthJson = JsonSerializer.Serialize(customerGrowth);
             ViewBag.ProviderGrowthJson = JsonSerializer.Serialize(providerGrowth);
 
-            // 3. Category Popularity (All-time bookings per category)
             var catCounts = context.Category
                 .Select(cat => new {
                     Name = cat.Name,
@@ -176,7 +166,6 @@ namespace Local_Market_Service.Controllers
             ViewBag.CatPopLabelsJson = JsonSerializer.Serialize(catCounts.Select(c => c.Name));
             ViewBag.CatPopValuesJson = JsonSerializer.Serialize(catCounts.Select(c => c.Count));
 
-            // 4. Booking Status Distribution
             var statusCounts = context.Booking
                 .GroupBy(b => string.IsNullOrEmpty(b.Status) ? "Pending" : b.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
@@ -184,7 +173,6 @@ namespace Local_Market_Service.Controllers
             ViewBag.StatusLabelsJson = JsonSerializer.Serialize(statusCounts.Select(s => s.Status));
             ViewBag.StatusValuesJson = JsonSerializer.Serialize(statusCounts.Select(s => s.Count));
 
-            // 5. Top Providers
             var topProviders = context.Providers
                 .Include(p => p.ApplicationUser)
                 .Include(p => p.Services)
@@ -201,7 +189,6 @@ namespace Local_Market_Service.Controllers
                 .ToList();
             ViewBag.TopProvidersJson = JsonSerializer.Serialize(topProviders);
 
-            // Summary Stats
             ViewBag.TotalRevenue = context.Booking.Where(b => b.Status == "Completed").Sum(b => (decimal?)b.Amount) ?? 0m;
             ViewBag.TotalBookings = context.Booking.Count();
             ViewBag.AvgBookingValue = ViewBag.TotalBookings > 0 ? ViewBag.TotalRevenue / ViewBag.TotalBookings : 0m;

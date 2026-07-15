@@ -54,7 +54,7 @@ namespace Local_Market_Service.Controllers
                 .Include(s => s.Provider)
                 .ThenInclude(p => p.ApplicationUser)
                 .Where(s => s.Status == "Active")
-                .OrderByDescending(s => s.Id) // Simplified for demonstration
+                .OrderByDescending(s => s.Id) 
                 .Take(6)
                 .ToListAsync();
 
@@ -66,7 +66,7 @@ namespace Local_Market_Service.Controllers
             return View(customer);
         }
 
-        // 2. Explore / Browse Services
+        
         public async Task<IActionResult> Explore(int? categoryId, string? search)
         {
             var query = _context.Services
@@ -96,7 +96,7 @@ namespace Local_Market_Service.Controllers
             return View(services);
         }
 
-        // 3. Cart Management
+        
         [HttpPost]
         public async Task<IActionResult> AddToCart(int serviceId)
         {
@@ -174,7 +174,7 @@ namespace Local_Market_Service.Controllers
                     
                     RazorpayClient client = new RazorpayClient(key, secret);
                     Dictionary<string, object> options = new Dictionary<string, object>();
-                    // Razorpay accepts amount in paise
+                    
                     options.Add("amount", (int)(service.Price * 100)!); 
                     options.Add("currency", "INR");
                     options.Add("receipt", "rcpt_" + Guid.NewGuid().ToString().Substring(0, 8));
@@ -194,7 +194,7 @@ namespace Local_Market_Service.Controllers
                     return RedirectToAction("Bookings");
                 }
             }
-            else // Cash
+            else 
             {
                 var booking = new Booking
                 {
@@ -237,7 +237,6 @@ namespace Local_Market_Service.Controllers
             var service = await _context.Services.FindAsync(serviceId);
             if (service == null) return NotFound();
 
-            // Verify the signature manually using HMAC-SHA256
             string secret = config["Razorpay:Secret"]!;
             string payload = $"{razorpay_order_id}|{razorpay_payment_id}";
             string expectedSignature;
@@ -285,7 +284,6 @@ namespace Local_Market_Service.Controllers
             return RedirectToAction("Bookings");
         }
 
-        // 4. Checkout
         public async Task<IActionResult> Checkout()
         {
             var customer = await GetCurrentCustomerAsync();
@@ -354,7 +352,6 @@ namespace Local_Market_Service.Controllers
             return RedirectToAction("Bookings");
         }
 
-        // 5. Bookings History
         public async Task<IActionResult> Bookings()
         {
             var customer = await GetCurrentCustomerAsync();
@@ -387,7 +384,6 @@ namespace Local_Market_Service.Controllers
             return RedirectToAction("Bookings");
         }
 
-        // 6. Profile
         public async Task<IActionResult> Profile()
         {
             var customer = await GetCurrentCustomerAsync();
