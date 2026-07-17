@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Text.Json;
 
 namespace Local_Market_Service.Controllers
@@ -39,23 +38,6 @@ namespace Local_Market_Service.Controllers
                 .ToList();
             ViewBag.RecentBookings = recentBookings;
 
-       
-        var today = DateTime.Today;
-        var revLabels = new List<string>();
-        var revValues = new List<decimal>();
-        for (int i = 6; i >= 0; i--)
-        {
-            var day = today.AddDays(-i);
-            revLabels.Add(day.ToString("MMM dd"));
-            var dayTotal = context.Booking
-                .Where(b => b.BookingDate.Date == day)
-                .Sum(b => (decimal?)b.Amount) ?? 0m;
-            revValues.Add(dayTotal);
-        }
-        ViewBag.RevLabelsJson = JsonSerializer.Serialize(revLabels);
-        ViewBag.RevValuesJson = JsonSerializer.Serialize(revValues);
-
-        
             var catCounts = context.Category
                 .Select(cat => new {
                     Name = cat.Name,
@@ -75,21 +57,6 @@ namespace Local_Market_Service.Controllers
             .Take(5)
             .ToList();
         ViewBag.ProvList = provQueue;
-
-        
-        var activities = context.Booking
-            .Include(b => b.Customer).ThenInclude(c => c.ApplicationUser)
-            .Include(b => b.Service)
-            .OrderByDescending(b => b.BookingDate)
-            .Take(10)
-            .Select(b => new {
-                User = b.Customer.ApplicationUser.FullName,
-                Text = $"Booked {b.Service.Name}",
-                Date = b.BookingDate
-            })
-            .ToList();
-        ViewBag.ActivityFeedJson = JsonSerializer.Serialize(activities);
-
        
         var payMethods = new List<object>();
         try
